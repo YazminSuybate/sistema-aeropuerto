@@ -13,10 +13,25 @@ export default function DashboardTickets() {
   });
 
   useEffect(() => {
-    fetch("/dashboardData.json")  
-      .then(res => res.json())
-      .then(json => setData(json))
-      .catch(err => console.error("Error cargando datos:", err));
+    const fetchData = async () => {
+      try {
+        const [metricsRes, prioridadRes, estadoRes] = await Promise.all([
+          fetch("http://localhost:4000/metrics"),
+          fetch("http://localhost:4000/ticketsPrioridad"),
+          fetch("http://localhost:4000/ticketsEstado")
+        ]);
+
+        const metrics = await metricsRes.json();
+        const ticketsPrioridad = await prioridadRes.json();
+        const ticketsEstado = await estadoRes.json();
+
+        setData({ metrics, ticketsPrioridad, ticketsEstado });
+      } catch (err) {
+        console.error("Error cargando datos:", err);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const COLORS = ["#5FA8D3", "#2EC4B6", "#1B4965", "#2E2E2E"];
@@ -78,7 +93,7 @@ export default function DashboardTickets() {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Legend verticalAlign="bottom" height={36}/>
+              <Legend verticalAlign="bottom" height={36} />
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
