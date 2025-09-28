@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Colores de tu paleta */
+:root {
+  /* Colores principales */
+  --color-primary: #5FA8D3;    /* azul claro */
+  --color-secondary: #2EC4B6;  /* turquesa */
+  --color-dark: #1B4965;       /* azul oscuro */
+  --color-gray: #2E2E2E;       /* gris oscuro */
+  --color-light: #E5E5E5;      /* gris claro */
+
+  /* Colores extra para acentos y fondo de cards */
+  --color-accent1: #F9A826;    /* naranja suave */
+  --color-accent2: #FF6B6B;    /* rojo coral */
+  --color-bg-card: #FFFFFF;    /* blanco para cards */
+  --color-bg-sidebar: #F0F4F8; /* fondo de sidebar más suave */
+  --color-text-muted: #555555; /* texto secundario */
+}

@@ -1,0 +1,25 @@
+.dashboard-tickets .chart-bar .bar {
+  transition: all 0.3s ease-in-out;
+}
+
+.dashboard-tickets .chart-bar .bar:hover {
+  transform: scaleY(1.1);
+}
+
+.chart-pie .pie {
+  transition: transform 0.3s;
+}
+
+.chart-pie .pie:hover {
+  transform: scale(1.1);
+}
+
+/* Tarjetas de métricas */
+.dashboard-tickets .p-6 {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dashboard-tickets .p-6:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}

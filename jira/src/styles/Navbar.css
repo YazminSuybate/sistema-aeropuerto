@@ -1,0 +1,42 @@
+.navbar {
+  background-color: var(--color-light);
+}
+
+.nav-link {
+  color: var(--color-dark);
+  font-weight: 600;
+  font-size: 1.1rem;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -3px;
+  left: 0;
+  background-color: var(--color-primary);
+  transition: width 0.3s;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Botón login */
+.login-btn {
+  background-color: var(--color-primary);
+  color: var(--color-light);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  background-color: var(--color-secondary);
+}

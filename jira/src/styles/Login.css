@@ -1,0 +1,54 @@
+.login-container {
+  animation: fadeInContainer 0.8s ease-out forwards;
+}
+
+.login-box {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.input-field {
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--color-gray);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-field:focus {
+  border-color: var(--color-primary);
+}
+
+.btn-login {
+  background-color: var(--color-primary);
+  color: var(--color-light);
+  font-weight: bold;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-login:hover {
+  background-color: var(--color-secondary);
+  transform: translateY(-2px);
+}
+
+.link-register {
+  color: var(--color-primary);
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.link-register:hover {
+  color: var(--color-secondary);
+}
+
+/* Keyframes */
+@keyframes fadeInContainer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

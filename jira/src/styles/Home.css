@@ -1,0 +1,33 @@
+.home-container {
+  animation: fadeInContainer 1s ease-out forwards;
+}
+
+.home-title {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+.home-text {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 1.2s ease-out forwards;
+}
+
+.home-buttons button {
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.home-buttons button:hover {
+  transform: translateY(-3px);
+}
+
+@keyframes fadeInContainer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
