@@ -1,0 +1,20 @@
+{
+  "metrics": [
+    { "label": "Tickets Abiertos", "value": 128, "color": "#5FA8D3" },
+    { "label": "Tickets Cerrados", "value": 342, "color": "#2EC4B6" },
+    { "label": "Tareas Pendientes", "value": 75, "color": "#1B4965" },
+    { "label": "Tiempos Excedidos", "value": 12, "color": "#2E2E2E" }
+  ],
+  "ticketsPrioridad": [
+    { "prioridad": "Alta", "tickets": 40 },
+    { "prioridad": "Media", "tickets": 30 },
+    { "prioridad": "Baja", "tickets": 20 },
+    { "prioridad": "Muy Baja", "tickets": 10 }
+  ],
+  "ticketsEstado": [
+    { "estado": "Abiertos", "value": 40 },
+    { "estado": "Cerrados", "value": 30 },
+    { "estado": "Pendientes", "value": 20 },
+    { "estado": "Excedidos", "value": 10 }
+  ]
+}
