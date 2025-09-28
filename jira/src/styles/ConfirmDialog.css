@@ -1,0 +1,37 @@
+.confirm-dialog {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.confirm-dialog__icon {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.confirm-dialog__content {
+  margin-bottom: 2rem;
+}
+
+.confirm-dialog__message {
+  font-size: 1rem;
+  color: #2e2e2e;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .confirm-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .confirm-dialog__actions button {
+    width: 100%;
+  }
+}
