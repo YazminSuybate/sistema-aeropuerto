@@ -4,6 +4,9 @@ import Button from "../../components/admin/userManagement/Button";
 import Badge from "../../components/admin/userManagement/Badge";
 import SearchInput from "../../components/admin/userManagement/SearchInput";
 import "../../styles/UserManagement.css";
+import Modal from "../../components/Modal";
+import UserForm from "../../components/admin/userManagement/UserForm";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 // Datos de ejemplo
 const mockUsers = [
@@ -14,7 +17,7 @@ const mockUsers = [
     role: "Atención al pasajero",
     area: "------------------",
     status: "activo",
-    registrationDate: "2024-01-15",
+    registrationDate: "2025-01-15",
   },
   {
     id: 2,
@@ -23,7 +26,7 @@ const mockUsers = [
     role: "Operativo",
     area: "Mantenimiento",
     status: "activo",
-    registrationDate: "2024-02-20",
+    registrationDate: "2025-02-20",
   },
   {
     id: 3,
@@ -32,7 +35,7 @@ const mockUsers = [
     role: "Gerencia",
     area: "------------------",
     status: "inactivo",
-    registrationDate: "2024-01-10",
+    registrationDate: "2025-01-10",
   },
   {
     id: 4,
@@ -41,7 +44,7 @@ const mockUsers = [
     role: "Admin",
     area: "ARRIBA ALIANZA CAAAAAAAAAAARAJO",
     status: "activo",
-    registrationDate: "2024-03-05",
+    registrationDate: "2025-03-05",
   },
   {
     id: 5,
@@ -50,14 +53,20 @@ const mockUsers = [
     role: "Operativo",
     area: "Seguridad",
     status: "activo",
-    registrationDate: "2024-02-28",
+    registrationDate: "2025-02-28",
   },
 ];
 
 const UserManagement = () => {
-  const [users] = useState(mockUsers);
+  const [users, setUsers] = useState(mockUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Filtrar usuarios basado en búsqueda y estado
   const filteredUsers = useMemo(() => {
@@ -109,12 +118,80 @@ const UserManagement = () => {
     return <Badge variant={variant}>{role}</Badge>;
   };
 
+  const handleCreateUser = async (userData) => {
+    setIsLoading(true);
+    try {
+      // Simular llamada a API
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const newUser = {
+        ...userData,
+        id: Math.max(...users.map((u) => u.id)) + 1,
+        registrationDate: new Date().toISOString().split("T")[0],
+      };
+
+      setUsers((prev) => [...prev, newUser]);
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error("Error creating user:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditUser = async (userData) => {
+    setIsLoading(true);
+    try {
+      // Simular llamada a API
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === selectedUser.id ? { ...user, ...userData } : user
+        )
+      );
+
+      setIsEditModalOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Error updating user:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    setIsLoading(true);
+    try {
+      // Simular llamada a API
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setUsers((prev) => prev.filter((user) => user.id !== selectedUser.id));
+      setIsDeleteDialogOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openEditModal = (user) => {
+    setSelectedUser(user);
+    setIsEditModalOpen(true);
+  };
+
+  const openDeleteDialog = (user) => {
+    setSelectedUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
   return (
     <div className="user-management-container">
       <div className="user-management">
         <div className="user-management__header">
           <h1 className="user-management__title">Gestión de Usuarios</h1>
-          <Button variant="primary">
+          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
             <svg
               width="16"
               height="16"
@@ -203,7 +280,11 @@ const UserManagement = () => {
                   <Table.Cell>{formatDate(user.registrationDate)}</Table.Cell>
                   <Table.Cell>
                     <div className="action-buttons">
-                      <Button variant="outline" size="small">
+                      <Button
+                        variant="outline"
+                        size="small"
+                        onClick={() => openEditModal(user)}
+                      >
                         <svg
                           width="14"
                           height="14"
@@ -216,7 +297,11 @@ const UserManagement = () => {
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                       </Button>
-                      <Button variant="danger" size="small">
+                      <Button
+                        variant="danger"
+                        size="small"
+                        onClick={() => openDeleteDialog(user)}
+                      >
                         <svg
                           width="14"
                           height="14"
@@ -245,6 +330,45 @@ const UserManagement = () => {
             </div>
           )}
         </div>
+
+        <Modal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          title="Nuevo Usuario"
+          size="large"
+        >
+          <UserForm
+            onSubmit={handleCreateUser}
+            onCancel={() => setIsCreateModalOpen(false)}
+            isLoading={isLoading}
+          />
+        </Modal>
+
+        <Modal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          title="Editar Usuario"
+          size="large"
+        >
+          <UserForm
+            user={selectedUser}
+            onSubmit={handleEditUser}
+            onCancel={() => setIsEditModalOpen(false)}
+            isLoading={isLoading}
+          />
+        </Modal>
+
+        <ConfirmDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onConfirm={handleDeleteUser}
+          title="Eliminar Usuario"
+          message={`¿Estás seguro de que deseas eliminar al usuario "${selectedUser?.fullName}"? Esta acción no se puede deshacer.`}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          variant="danger"
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );
