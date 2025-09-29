@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import Button from "./Button";
 import "../../../styles/UserForm.css";
+import { roles, areas } from "../../../mocks/handlers";
 
 const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    role: "Usuario",
+    role: roles[0] || "Admin",
     area: "",
     status: "activo",
   });
@@ -18,11 +19,20 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
       setFormData({
         fullName: user.fullName || "",
         email: user.email || "",
-        role: user.role || "Usuario",
+        role: user.role || roles[0] || "Admin",
         area: user.area || "",
         status: user.status || "activo",
       });
+    } else {
+      setFormData({
+        fullName: "",
+        email: "",
+        role: roles[0] || "Admin",
+        area: "",
+        status: "activo",
+      });
     }
+    setErrors({});
   }, [user]);
 
   const validateForm = () => {
@@ -38,8 +48,8 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
       newErrors.email = "El correo electrónico no es válido";
     }
 
-    if (!formData.area.trim()) {
-      newErrors.area = "El área es requerida";
+    if (formData.role === "Operativo" && !formData.area.trim()) {
+      newErrors.area = "Debe seleccionar un área para roles Operativos";
     }
 
     setErrors(newErrors);
@@ -60,7 +70,6 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
       [name]: value,
     }));
 
-    // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -68,15 +77,6 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
       }));
     }
   };
-
-  const roles = ["Atención al Pasajero", "Operativo", "Gerencia", "Admin"];
-  const areas = [
-    "Desarrollo",
-    "Gerencia",
-    "Atención al Cliente",
-    "Seguridad",
-    "Mantenimiento",
-  ];
 
   return (
     <form onSubmit={handleSubmit} className="user-form">
@@ -91,9 +91,8 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
             name="fullName"
             value={formData.fullName}
             onChange={handleChange}
-            className={`form-input ${
-              errors.fullName ? "form-input--error" : ""
-            }`}
+            className={`form-input ${errors.fullName ? "form-input--error" : ""
+              }`}
             placeholder="Ingrese el nombre completo"
           />
           {errors.fullName && (
@@ -187,8 +186,8 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
           {isLoading
             ? "Guardando..."
             : user
-            ? "Actualizar Usuario"
-            : "Crear Usuario"}
+              ? "Actualizar Usuario"
+              : "Crear Usuario"}
         </Button>
       </div>
     </form>
