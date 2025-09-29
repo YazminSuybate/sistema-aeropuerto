@@ -1,0 +1,80 @@
+.auth-container {
+  animation: fadeInContainer 0.8s ease-out forwards;
+}
+
+.auth-box {
+  animation: fadeInUp 0.8s ease-out forwards;
+  border-radius: 1rem;
+}
+
+.auth-info {
+  background-color: var(--color-primary);
+  color: var(--color-light);
+}
+
+.auth-info h2 {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+.auth-info p {
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  line-height: 1.6rem;
+}
+
+.input-field {
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--color-gray);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-field:focus {
+  border-color: var(--color-primary);
+}
+
+.btn-login {
+  background-color: var(--color-primary);
+  color: var(--color-light);
+  font-weight: bold;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-login:hover {
+  background-color: var(--color-secondary);
+  transform: translateY(-2px);
+}
+
+.toggle-btn {
+  color: var(--color-primary);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.toggle-btn:hover {
+  color: var(--color-secondary);
+}
+
+@keyframes fadeInContainer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive: ocultar info en móvil */
+@media (max-width: 768px) {
+  .auth-info {
+    display: none;
+  }
+}
