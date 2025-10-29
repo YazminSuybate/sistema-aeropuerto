@@ -5,7 +5,7 @@ export default function SidebarAdmin({ setActivePanel }) {
   const links = [
     { key: "intro", label: "Inicio" },
     { key: "usuarios", label: "Gestión de Usuarios" },
-    { key: "asignacion", label: "Asignación de Tareas" },
+    /*{ key: "asignacion", label: "Asignación de Tareas" },*/
     { key: "tiempos", label: "Tiempos Máximos" },
     { key: "dashboard", label: "Dashboard Tickets" },
   ]
