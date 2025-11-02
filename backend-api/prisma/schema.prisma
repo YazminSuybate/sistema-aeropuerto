@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// =======================================================
+//                       MODELOS
+// =======================================================
+
+model area {
+  id_area       Int       @id @default(autoincrement()) @map("id_area")
+  nombre_area   String    @db.VarChar(100)
+  descripcion   String?   @db.VarChar(255) // Es nullable si no tiene NOT NULL en la DB
+
+  // Relaciones
+  usuarios      usuario[]
+  tickets       ticket[] // Relacionado con ticket.id_area_asignada
+}
+
+model rol {
+  id_rol      Int       @id @default(autoincrement()) @map("id_rol")
+  nombre_rol  String    @db.VarChar(50)
+  descripcion String?   @db.VarChar(255) // Es nullable si no tiene NOT NULL en la DB
+
+  // Relación
+  usuarios    usuario[]
+}
+
+model usuario {
+  id_usuario      Int       @id @default(autoincrement()) @map("id_usuario")
+  nombre          String    @db.VarChar(100)
+  apellido        String    @db.VarChar(100)
+  email           String    @unique @db.VarChar(150)
+  password        String    @db.VarChar(255)
+  activo          Boolean   @default(true) @db.TinyInt // TINYINT(1) mapea a Boolean en Prisma/MySQL
+  fecha_registro  DateTime  @default(now()) @db.Timestamp(0) // TIMESTAMP
+
+  // Claves Foráneas
+  id_rol          Int       @map("id_rol")
+  id_area         Int       @map("id_area")
+
+  // Relaciones
+  rol             rol       @relation(fields: [id_rol], references: [id_rol])
+  area            area      @relation(fields: [id_area], references: [id_area])
+
+  tickets_creados     ticket[]    @relation("Creador") // Un usuario es CREADOR de muchos tickets
+  tickets_responsable ticket[]    @relation("Responsable") // Un usuario es RESPONSABLE de muchos tickets
+  comentarios         comentario[]
+}
+
+model estado {
+  id_estado      Int       @id @default(autoincrement()) @map("id_estado")
+  nombre_estado  String    @db.VarChar(50)
+  descripcion    String?   @db.VarChar(255) // Es nullable si no tiene NOT NULL en la DB
+
+  // Relación
+  tickets        ticket[]
+}
+
+model ticket {
+  id_ticket             Int         @id @default(autoincrement()) @map("id_ticket")
+  titulo                String      @db.VarChar(150)
+  descripcion           String      @db.Text // Mapeo de TEXT
+  categoria             String      @db.VarChar(100)
+  fecha_creacion        DateTime    @default(now()) @db.Timestamp(0) // TIMESTAMP
+  fecha_resolucion      DateTime?   @db.Timestamp(0) // TIMESTAMP, nullable
+  
+  // Claves Foráneas
+  id_usuario_creador    Int         @map("id_usuario_creador")
+  id_usuario_responsable Int?        @map("id_usuario_responsable") // Es nullable si el responsable se asigna después
+  id_area_asignada      Int         @map("id_area_asignada")
+  id_estado             Int         @map("id_estado")
+
+  // Relaciones
+  creador               usuario     @relation("Creador", fields: [id_usuario_creador], references: [id_usuario])
+  responsable           usuario?    @relation("Responsable", fields: [id_usuario_responsable], references: [id_usuario]) // Es opcional si la FK es nullable
+  area_asignada         area        @relation(fields: [id_area_asignada], references: [id_area])
+  estado                estado      @relation(fields: [id_estado], references: [id_estado])
+  
+  comentarios           comentario[]
+}
+
+model comentario {
+  id_comentario  Int       @id @default(autoincrement()) @map("id_comentario")
+  mensaje        String    @db.Text // Mapeo de TEXT
+  fecha_comentario DateTime @default(now()) @db.Timestamp(0) // TIMESTAMP
+  
+  // Claves Foráneas
+  id_ticket      Int       @map("id_ticket")
+  id_usuario     Int       @map("id_usuario")
+
+  // Relaciones
+  ticket         ticket    @relation(fields: [id_ticket], references: [id_ticket])
+  usuario        usuario   @relation(fields: [id_usuario], references: [id_usuario])
+}
