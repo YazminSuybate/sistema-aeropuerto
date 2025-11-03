@@ -42,11 +42,11 @@ model usuario {
 
   // Claves Foráneas
   id_rol          Int       @map("id_rol")
-  id_area         Int       @map("id_area")
+  id_area         Int?       @map("id_area")
 
   // Relaciones
   rol             rol       @relation(fields: [id_rol], references: [id_rol])
-  area            area      @relation(fields: [id_area], references: [id_area])
+  area            area?      @relation(fields: [id_area], references: [id_area])
 
   tickets_creados     ticket[]    @relation("Creador") // Un usuario es CREADOR de muchos tickets
   tickets_responsable ticket[]    @relation("Responsable") // Un usuario es RESPONSABLE de muchos tickets
