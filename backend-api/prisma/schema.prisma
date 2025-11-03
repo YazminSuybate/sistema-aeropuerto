@@ -38,6 +38,7 @@ model usuario {
   password        String    @db.VarChar(255)
   activo          Boolean   @default(true) @db.TinyInt // TINYINT(1) mapea a Boolean en Prisma/MySQL
   fecha_registro  DateTime  @default(now()) @db.Timestamp(0) // TIMESTAMP
+  refresh_token    String?    @db.VarChar(255)
 
   // Claves Foráneas
   id_rol          Int       @map("id_rol")

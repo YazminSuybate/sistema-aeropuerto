@@ -5,35 +5,40 @@ import { UsuarioRepository } from '../repositories/usuario.repository.js';
 const usuarioRepository = new UsuarioRepository();
 const usuarioService = new UsuarioService(usuarioRepository);
 
-export class UsuarioController {
+function validateAndGetId(req: Request, res: Response): number | null {
+    const idParam = req.params.id;
 
-    // GET /usuarios
+    if (!idParam) {
+        res.status(400).json({ message: 'El ID es obligatorio en la ruta.' });
+        return null;
+    }
+
+    const id_usuario = parseInt(idParam, 10);
+    
+    if (isNaN(id_usuario)) {
+        res.status(400).json({ message: 'ID de usuario inválido' });
+        return null;
+    }
+
+    return id_usuario;
+}
+
+export class UsuarioController {
+    // GET api/usuarios
     async getAll(_req: Request, res: Response): Promise<void> {
         try {
             const usuarios = await usuarioService.getAllUsuarios();
             res.status(200).json(usuarios);
         } catch (error) {
-            console.error(error);
+            console.error('Error en getAll:', error);
             res.status(500).json({ message: 'Error al obtener usuarios' });
         }
     }
 
-    // GET /usuarios/:id
+    // GET api/usuarios/:id
     async getById(req: Request, res: Response): Promise<void> {
-        const idParam = req.params.id; 
-
-        if (idParam === undefined) {
-             res.status(400).json({ message: 'El ID es obligatorio en la ruta.' });
-             return;
-        }
-
-        // 2. Parseo, ahora idParam es un string garantizado
-        const id_usuario = parseInt(idParam, 10);
-        
-        if (isNaN(id_usuario)) {
-            res.status(400).json({ message: 'ID de usuario inválido' });
-            return;
-        }
+        const id_usuario = validateAndGetId(req, res);
+        if (id_usuario === null) return; 
 
         try {
             const usuario = await usuarioService.getUsuarioById(id_usuario);
@@ -44,77 +49,79 @@ export class UsuarioController {
                 res.status(404).json({ message: 'Usuario no encontrado' });
             }
         } catch (error) {
-            console.error(error);
+            console.error('Error en getById:', error);
             res.status(500).json({ message: 'Error al obtener el usuario' });
         }
     }
 
-    // POST /usuarios
+    // POST api/usuarios
     async create(req: Request, res: Response): Promise<void> {
-        const data = req.body;
+        const { nombre, apellido, email, password, id_rol, id_area } = req.body;
         
-        if (!data.nombre || !data.email || !data.password || !data.id_rol || !data.id_area) {
-            res.status(400).json({ message: 'Faltan campos obligatorios' });
+        if (!nombre || !apellido || !email || !password || !id_rol || !id_area) {
+            res.status(400).json({ message: 'Faltan campos obligatorios (nombre, apellido, email, password, id_rol, id_area).' });
             return;
         }
 
         try {
+            const data = { nombre, apellido, email, password, id_rol, id_area };
             const newUsuario = await usuarioService.createUsuario(data);
             res.status(201).json(newUsuario);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Error al crear usuario. El email podría estar en uso o faltan datos de FK.' });
+        } catch (error: any) {
+            console.error('Error en create:', error);
+            
+            if (error.code === 'P2002') { 
+                res.status(409).json({ message: 'El email proporcionado ya está registrado.', code: 'P2002' });
+                return;
+            }
+            if (error.message?.includes('FK')) {
+                res.status(400).json({ message: 'ID de Rol o Área inválido.' });
+                return;
+            }
+
+            res.status(500).json({ message: 'Error interno del servidor al crear usuario.' });
         }
     }
 
-    // PUT /usuarios/:id
+    // PUT api/usuarios/:id
     async update(req: Request, res: Response): Promise<void> {
-        const idParam = req.params.id; 
-        const data = req.body;
+        const id_usuario = validateAndGetId(req, res);
+        if (id_usuario === null) return;
 
-        if (idParam === undefined) {
-             res.status(400).json({ message: 'El ID es obligatorio en la ruta.' });
-             return;
-        }
-
-        const id_usuario = parseInt(idParam, 10);
-        
-        if (isNaN(id_usuario)) {
-            res.status(400).json({ message: 'ID de usuario inválido' });
-            return;
-        }
+        const data = req.body; 
 
         try {
             const updatedUsuario = await usuarioService.updateUsuario(id_usuario, data);
             res.status(200).json(updatedUsuario);
-        } catch (error) {
-            console.error(error);
-            res.status(404).json({ message: 'Usuario no encontrado o error al actualizar' });
+        } catch (error: any) {
+            console.error('Error en update:', error);
+            
+            if (error.message?.includes('no encontrado')) {
+                res.status(404).json({ message: 'Usuario no encontrado.' });
+                return;
+            }
+
+            res.status(500).json({ message: 'Error al actualizar el usuario.' });
         }
     }
 
-    // DELETE /usuarios/:id (Soft Delete)
+    // DELETE api/usuarios/:id (Soft Delete)
     async remove(req: Request, res: Response): Promise<void> {
-        const idParam = req.params.id; 
-
-        if (idParam === undefined) {
-             res.status(400).json({ message: 'El ID es obligatorio en la ruta.' });
-             return;
-        }
-        
-        const id_usuario = parseInt(idParam, 10);
-        
-        if (isNaN(id_usuario)) {
-            res.status(400).json({ message: 'ID de usuario inválido' });
-            return;
-        }
+        const id_usuario = validateAndGetId(req, res);
+        if (id_usuario === null) return;
 
         try {
             await usuarioService.deleteUsuario(id_usuario);
             res.status(204).send();
-        } catch (error) {
-            console.error(error);
-            res.status(404).json({ message: 'Usuario no encontrado o error al eliminar' });
+        } catch (error: any) {
+            console.error('Error en remove:', error);
+
+            if (error.message?.includes('no encontrado')) {
+                res.status(404).json({ message: 'Usuario no encontrado.' });
+                return;
+            }
+            
+            res.status(500).json({ message: 'Error al eliminar el usuario.' });
         }
     }
 }

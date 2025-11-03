@@ -23,16 +23,6 @@ export class UsuarioRepository {
         });
     }
 
-    async findByEmail(email: string): Promise<Usuario | null> {
-        return prisma.usuario.findUnique({
-            where: { email },
-            include: {
-                rol: true,
-                area: true,
-            },
-        });
-    }
-
     async create(data: UsuarioCreateDTO): Promise<Usuario> {
         return prisma.usuario.create({ data });
     }
@@ -50,6 +40,30 @@ export class UsuarioRepository {
             data: {
                 activo: false,
             },
+        });
+    }
+
+    // metodos autenticacion
+    async findByEmail(email: string): Promise<Usuario | null> {
+        return prisma.usuario.findUnique({
+            where: { email },
+            include: {
+                rol: true,
+                area: true,
+            },
+        });
+    }
+
+    async updateRefreshToken(id_usuario: number, refreshToken: string | null): Promise<void> {
+        await prisma.usuario.update({
+            where: { id_usuario },
+            data: { refresh_token: refreshToken },
+        });
+    }
+
+    async findByRefreshToken(refreshToken: string): Promise<Usuario | null> {
+        return prisma.usuario.findFirst({
+            where: { refresh_token: refreshToken },
         });
     }
 }
