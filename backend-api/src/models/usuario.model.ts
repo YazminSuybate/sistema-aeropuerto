@@ -1,10 +1,12 @@
 import type { usuario } from '@prisma/client';
 
-export interface Usuario extends usuario {}
+export interface Usuario extends usuario { }
 
 export type UsuarioCreateDTO = Pick<
   Usuario,
-  'nombre' | 'apellido' | 'email' | 'password' | 'id_rol' | 'id_area' 
->;
+  'nombre' | 'apellido' | 'email' | 'password' | 'id_rol'
+> & {
+  id_area?: number | null;
+};
 
 export type UsuarioUpdateDTO = Partial<Omit<Usuario, 'id_usuario' | 'fecha_registro'>>;

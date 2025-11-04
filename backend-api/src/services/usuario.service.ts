@@ -3,6 +3,7 @@ import type { UsuarioRepository } from '../repositories/usuario.repository.js';
 import type { Usuario, UsuarioCreateDTO, UsuarioUpdateDTO } from '../models/usuario.model.js';
 
 const SALT_ROUNDS = 10;
+const ID_ROL_OPERATIVO = 2;
 
 export class UsuarioService {
     private repository: UsuarioRepository;
@@ -26,11 +27,20 @@ export class UsuarioService {
             throw new Error('El correo electrónico ya está registrado.');
         }
 
+        if (data.id_rol === ID_ROL_OPERATIVO && !data.id_area) {
+            throw new Error('Los usuarios con rol operativo deben tener un área asignada.');
+        }
+
+        if (data.id_rol !== ID_ROL_OPERATIVO && !data.id_area) {
+            data.id_area = null;
+        }
+
         const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
 
         const userData = {
             ...data,
-            password: hashedPassword
+            password: hashedPassword,
+            id_area: data.id_area === undefined ? null : data.id_area
         };
 
         return this.repository.create(userData);

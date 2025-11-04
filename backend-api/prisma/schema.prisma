@@ -8,93 +8,155 @@ datasource db {
 }
 
 // =======================================================
-//                       MODELOS
+//                       MODELOS BASE
 // =======================================================
 
 model area {
   id_area       Int       @id @default(autoincrement()) @map("id_area")
-  nombre_area   String    @db.VarChar(100)
-  descripcion   String?   @db.VarChar(255) // Es nullable si no tiene NOT NULL en la DB
+  nombre_area   String    @unique @db.VarChar(100)
+  descripcion   String?   @db.VarChar(255)
 
   // Relaciones
   usuarios      usuario[]
   tickets       ticket[] // Relacionado con ticket.id_area_asignada
+  // NUEVA: Categorías que por defecto se asignan a esta área
+  categorias    categoria[]
 }
 
 model rol {
   id_rol      Int       @id @default(autoincrement()) @map("id_rol")
-  nombre_rol  String    @db.VarChar(50)
-  descripcion String?   @db.VarChar(255) // Es nullable si no tiene NOT NULL en la DB
+  nombre_rol  String    @unique @db.VarChar(50)
+  descripcion String?   @db.VarChar(255)
 
   // Relación
   usuarios    usuario[]
 }
 
 model usuario {
-  id_usuario      Int       @id @default(autoincrement()) @map("id_usuario")
-  nombre          String    @db.VarChar(100)
-  apellido        String    @db.VarChar(100)
-  email           String    @unique @db.VarChar(150)
-  password        String    @db.VarChar(255)
-  activo          Boolean   @default(true) @db.TinyInt // TINYINT(1) mapea a Boolean en Prisma/MySQL
-  fecha_registro  DateTime  @default(now()) @db.Timestamp(0) // TIMESTAMP
-  refresh_token    String?    @db.VarChar(255)
+  id_usuario            Int         @id @default(autoincrement()) @map("id_usuario")
+  nombre                String      @db.VarChar(100)
+  apellido              String      @db.VarChar(100)
+  email                 String      @unique @db.VarChar(150)
+  password              String      @db.VarChar(255)
+  activo                Boolean     @default(true) @db.TinyInt
+  fecha_registro        DateTime    @default(now()) @db.Timestamp(0)
+  refresh_token         String?     @db.VarChar(255)
 
   // Claves Foráneas
-  id_rol          Int       @map("id_rol")
-  id_area         Int?       @map("id_area")
+  id_rol                Int         @map("id_rol")
+  id_area               Int?        @map("id_area") // Nullable para Admin, Gerencia, Atencion
 
   // Relaciones
-  rol             rol       @relation(fields: [id_rol], references: [id_rol])
-  area            area?      @relation(fields: [id_area], references: [id_area])
+  rol                   rol         @relation(fields: [id_rol], references: [id_rol])
+  area                  area?       @relation(fields: [id_area], references: [id_area])
 
-  tickets_creados     ticket[]    @relation("Creador") // Un usuario es CREADOR de muchos tickets
-  tickets_responsable ticket[]    @relation("Responsable") // Un usuario es RESPONSABLE de muchos tickets
-  comentarios         comentario[]
+  tickets_creados       ticket[]    @relation("Creador")
+  tickets_responsable   ticket[]    @relation("Responsable")
+  comentarios           comentario[]
+  // NUEVA: Para la trazabilidad
+  historial_movimientos historial_ticket[]
 }
 
 model estado {
-  id_estado      Int       @id @default(autoincrement()) @map("id_estado")
-  nombre_estado  String    @db.VarChar(50)
-  descripcion    String?   @db.VarChar(255) // Es nullable si no tiene NOT NULL en la DB
+  id_estado     Int       @id @default(autoincrement()) @map("id_estado")
+  nombre_estado String    @db.VarChar(50)
+  descripcion   String?   @db.VarChar(255)
 
   // Relación
-  tickets        ticket[]
+  tickets       ticket[]
 }
 
-model ticket {
-  id_ticket             Int         @id @default(autoincrement()) @map("id_ticket")
-  titulo                String      @db.VarChar(150)
-  descripcion           String      @db.Text // Mapeo de TEXT
-  categoria             String      @db.VarChar(100)
-  fecha_creacion        DateTime    @default(now()) @db.Timestamp(0) // TIMESTAMP
-  fecha_resolucion      DateTime?   @db.Timestamp(0) // TIMESTAMP, nullable
-  
-  // Claves Foráneas
-  id_usuario_creador    Int         @map("id_usuario_creador")
-  id_usuario_responsable Int?        @map("id_usuario_responsable") // Es nullable si el responsable se asigna después
-  id_area_asignada      Int         @map("id_area_asignada")
-  id_estado             Int         @map("id_estado")
+// =====================================================================
+//                       MODELOS CLAVE DE NEGOCIO (NUEVOS Y AJUSTADOS)
+// ====================================================================
 
-  // Relaciones
-  creador               usuario     @relation("Creador", fields: [id_usuario_creador], references: [id_usuario])
-  responsable           usuario?    @relation("Responsable", fields: [id_usuario_responsable], references: [id_usuario]) // Es opcional si la FK es nullable
-  area_asignada         area        @relation(fields: [id_area_asignada], references: [id_area])
-  estado                estado      @relation(fields: [id_estado], references: [id_estado])
+model categoria {
+  id_categoria    Int       @id @default(autoincrement()) @map("id_categoria")
+  nombre_categoria String   @unique @db.VarChar(100) 
+  prioridad       String    @db.VarChar(10) 
+  sla_horas       Int       
+
+  // Clave de Asignación Automática
+  id_area_default Int       @map("id_area_default")
+  area_default    area      @relation(fields: [id_area_default], references: [id_area])
+
+  tickets         ticket[]
+}
+
+model pasajero {
+  id_pasajero   Int       @id @default(autoincrement()) @map("id_pasajero")
+  nombre        String    @db.VarChar(100)
+  documento_id  String    @db.VarChar(50)
+  info_contacto String?   @db.VarChar(255)
+
+  tickets       ticket[]
+}
+
+
+model ticket {
+  id_ticket               Int       @id @default(autoincrement()) @map("id_ticket")
+  titulo                  String    @db.VarChar(150)
+  descripcion             String    @db.Text
+  fecha_creacion          DateTime  @default(now()) @db.Timestamp(0)
+  fecha_resolucion        DateTime? @db.Timestamp(0)
   
-  comentarios           comentario[]
+  fecha_limite_sla        DateTime? @db.Timestamp(0) 
+  
+  id_usuario_creador      Int       @map("id_usuario_creador")
+  id_usuario_responsable  Int?      @map("id_usuario_responsable")
+  id_area_asignada        Int       @map("id_area_asignada")
+  id_estado               Int       @map("id_estado")
+  
+  id_categoria            Int       @map("id_categoria")
+
+  id_pasajero             Int?      @map("id_pasajero")
+
+  creador                 usuario   @relation("Creador", fields: [id_usuario_creador], references: [id_usuario])
+  responsable             usuario?  @relation("Responsable", fields: [id_usuario_responsable], references: [id_usuario])
+  area_asignada           area      @relation(fields: [id_area_asignada], references: [id_area])
+  estado                  estado    @relation(fields: [id_estado], references: [id_estado])
+  
+  categoria_info          categoria @relation(fields: [id_categoria], references: [id_categoria])
+  pasajero_info           pasajero? @relation(fields: [id_pasajero], references: [id_pasajero])
+
+  comentarios             comentario[]
+  evidencias              evidencia[]
+  historial               historial_ticket[]
 }
 
 model comentario {
-  id_comentario  Int       @id @default(autoincrement()) @map("id_comentario")
-  mensaje        String    @db.Text // Mapeo de TEXT
-  fecha_comentario DateTime @default(now()) @db.Timestamp(0) // TIMESTAMP
-  
-  // Claves Foráneas
-  id_ticket      Int       @map("id_ticket")
-  id_usuario     Int       @map("id_usuario")
+  id_comentario  Int        @id @default(autoincrement()) @map("id_comentario")
+  mensaje        String     @db.Text
+  fecha_comentario DateTime @default(now()) @db.Timestamp(0)
 
-  // Relaciones
+  id_ticket      Int        @map("id_ticket")
+  id_usuario     Int        @map("id_usuario")
+
+  ticket         ticket     @relation(fields: [id_ticket], references: [id_ticket])
+  usuario        usuario    @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+model evidencia {
+  id_evidencia    Int       @id @default(autoincrement()) @map("id_evidencia")
+  url_archivo     String    @db.VarChar(512)
+  tipo_mime       String    @db.VarChar(50) // Ej: "image/jpeg", "application/pdf"
+  fecha_subida    DateTime  @default(now()) @db.Timestamp(0)
+
+  id_ticket       Int       @map("id_ticket")
+  ticket          ticket    @relation(fields: [id_ticket], references: [id_ticket])
+}
+
+model historial_ticket {
+  id_historial   Int       @id @default(autoincrement()) @map("id_historial")
+  fecha_cambio   DateTime  @default(now()) @db.Timestamp(0)
+
+  id_ticket      Int       @map("id_ticket")
   ticket         ticket    @relation(fields: [id_ticket], references: [id_ticket])
+
+  id_usuario     Int       @map("id_usuario")
   usuario        usuario   @relation(fields: [id_usuario], references: [id_usuario])
+
+  tipo_cambio    String    @db.VarChar(50) // Ej: "CAMBIO_ESTADO", "ASIGNACION", "COMENTARIO_AUTOMATICO"
+  valor_anterior String?   @db.Text
+  valor_nuevo    String?   @db.Text
 }
