@@ -1,11 +1,11 @@
 import type { Request, Response } from 'express';
 import { UsuarioService } from '../services/usuario.service.js';
 import { UsuarioRepository } from '../repositories/usuario.repository.js';
+import { RolRepository } from '../repositories/rol.repository.js';
 
 const usuarioRepository = new UsuarioRepository();
-const usuarioService = new UsuarioService(usuarioRepository);
-
-const ID_ROL_OPERATIVO = 2;
+const rolRepository = new RolRepository();
+const usuarioService = new UsuarioService(usuarioRepository, rolRepository);
 
 function validateAndGetId(req: Request, res: Response): number | null {
     const idParam = req.params.id;
@@ -63,11 +63,6 @@ export class UsuarioController {
 
         if (!nombre || !apellido || !email || !password || !id_rol) {
             res.status(400).json({ message: 'Faltan campos obligatorios (nombre, apellido, email, password, id_rol).' });
-            return;
-        }
-
-        if (id_rol === ID_ROL_OPERATIVO && (id_area === undefined || id_area === null)) {
-            res.status(400).json({ message: 'El campo id_area es obligatorio para el rol operativo.' });
             return;
         }
 

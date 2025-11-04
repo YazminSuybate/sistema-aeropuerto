@@ -1,15 +1,17 @@
 import * as bcrypt from 'bcryptjs';
 import type { UsuarioRepository } from '../repositories/usuario.repository.js';
 import type { Usuario, UsuarioCreateDTO, UsuarioUpdateDTO } from '../models/usuario.model.js';
+import type { RolRepository } from '../repositories/rol.repository.js';
 
 const SALT_ROUNDS = 10;
-const ID_ROL_OPERATIVO = 2;
 
 export class UsuarioService {
     private repository: UsuarioRepository;
+    private rolRepository: RolRepository;
 
-    constructor(repository: UsuarioRepository) {
+    constructor(repository: UsuarioRepository, rolRepository: RolRepository) {
         this.repository = repository;
+        this.rolRepository = rolRepository;
     }
 
     async getAllUsuarios(): Promise<Usuario[]> {
@@ -26,6 +28,9 @@ export class UsuarioService {
         if (existingUser) {
             throw new Error('El correo electrónico ya está registrado.');
         }
+
+        const operativoRole = await this.rolRepository.findByName('Agente Operativo');
+        const ID_ROL_OPERATIVO = operativoRole ? operativoRole.id_rol : null;
 
         if (data.id_rol === ID_ROL_OPERATIVO && !data.id_area) {
             throw new Error('Los usuarios con rol operativo deben tener un área asignada.');

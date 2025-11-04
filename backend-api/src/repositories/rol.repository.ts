@@ -14,6 +14,12 @@ export class RolRepository {
         });
     }
 
+    async findByName(nombre_rol: string): Promise<Rol | null> {
+        return prisma.rol.findUnique({
+            where: { nombre_rol },
+        });
+    }
+
     async create(data: Omit<Rol, 'id_rol'>): Promise<Rol> {
         return prisma.rol.create({
             data,
