@@ -2,9 +2,11 @@ import type { Request, Response } from 'express';
 import { UsuarioService } from '../services/usuario.service.js';
 import { UsuarioRepository } from '../repositories/usuario.repository.js';
 import { RolRepository } from '../repositories/rol.repository.js';
+import { AreaRepository } from '../repositories/area.repository.js';
 
 const usuarioRepository = new UsuarioRepository();
 const rolRepository = new RolRepository();
+const areaRepository = new AreaRepository();
 const usuarioService = new UsuarioService(usuarioRepository, rolRepository);
 
 function validateAndGetId(req: Request, res: Response): number | null {
@@ -61,9 +63,27 @@ export class UsuarioController {
     async create(req: Request, res: Response): Promise<void> {
         const { nombre, apellido, email, password, id_rol, id_area } = req.body;
 
-        if (!nombre || !apellido || !email || !password || !id_rol) {
-            res.status(400).json({ message: 'Faltan campos obligatorios (nombre, apellido, email, password, id_rol).' });
+        const rolExiste = await rolRepository.findById(id_rol);
+        if (!id_rol || rolExiste === null) {
+            res.status(400).json({ message: 'El ID de rol proporcionado no existe.' });
             return;
+        }
+
+        const rolOperativo = await rolRepository.findByName("Agente Operativo");
+
+        if (rolOperativo && rolExiste.id_rol === rolOperativo.id_rol) {
+            if (!id_area) {
+                res.status(400).json({ message: 'Los usuarios con rol operativo deben tener un área asignada.' });
+                return;
+            }
+        }
+
+        if (id_area) {
+            const areaExiste = await areaRepository.findById(id_area);
+            if (!areaExiste) {
+                res.status(400).json({ message: 'El ID de área proporcionado no existe.' });
+                return;
+            }
         }
 
         try {
@@ -73,19 +93,11 @@ export class UsuarioController {
         } catch (error: any) {
             console.error('Error en create:', error);
 
-            if (error.message === 'El correo electrónico ya está registrado.') {
-                res.status(409).json({ message: error.message });
-                return;
-            }
-            if (error.message === 'Los usuarios con rol operativo deben tener un área asignada.') {
-                res.status(400).json({ message: error.message });
-                return;
-            }
-
             if (error.code === 'P2002') {
                 res.status(409).json({ message: 'El email proporcionado ya está registrado.', code: 'P2002' });
                 return;
             }
+
             if (error.message?.includes('FK')) {
                 res.status(400).json({ message: 'ID de Rol o Área inválido.' });
                 return;
@@ -102,19 +114,46 @@ export class UsuarioController {
 
         const data = req.body;
 
+        if (data.id_rol) {
+            const rolExiste = await rolRepository.findById(data.id_rol);
+            if (!rolExiste) {
+                res.status(400).json({ message: 'El ID de rol proporcionado no existe.' });
+                return;
+            }
+
+            const rolOperativo = await rolRepository.findByName("Agente Operativo");
+
+            if (rolOperativo && rolExiste.id_rol === rolOperativo.id_rol && !data.id_area) {
+                res.status(400).json({ message: 'El rol operativo requiere que se asigne un área.' });
+                return;
+            }
+        }
+
+        if (data.id_area !== undefined && data.id_area !== null) {
+            const areaExiste = await areaRepository.findById(data.id_area);
+            if (!areaExiste) {
+                res.status(400).json({ message: 'El ID de área proporcionado no existe.' });
+                return;
+            }
+        }
         try {
             const updatedUsuario = await usuarioService.updateUsuario(id_usuario, data);
             res.status(200).json(updatedUsuario);
         } catch (error: any) {
             console.error('Error en update:', error);
 
-            if (error.message === 'Los usuarios con rol operativo deben tener un área asignada.') {
-                res.status(400).json({ message: error.message });
+            if (error.code === 'P2002' && error.meta?.target.includes('email')) {
+                res.status(409).json({ message: 'El email proporcionado ya está registrado por otro usuario.' });
                 return;
             }
 
             if (error.message?.includes('no encontrado')) {
                 res.status(404).json({ message: 'Usuario no encontrado.' });
+                return;
+            }
+
+            if (error.message === 'Los usuarios con rol operativo deben tener un área asignada.') {
+                res.status(400).json({ message: error.message });
                 return;
             }
 

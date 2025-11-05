@@ -7,7 +7,7 @@ import { env } from 'prisma/config';
 const JWT_SECRET = env("JWT_SECRET")
 const REFRESH_SECRET = env("REFRESH_SECRET")
 
-type UserResponse = Omit<usuario, 'password' | 'refresh_token'>;
+type UserResponse = Omit<usuario, |'password' | 'refresh_token'>;
 
 export class AuthService {
     private userRepository: UsuarioRepository;

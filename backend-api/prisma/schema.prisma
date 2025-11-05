@@ -18,8 +18,7 @@ model area {
 
   // Relaciones
   usuarios      usuario[]
-  tickets       ticket[] // Relacionado con ticket.id_area_asignada
-  // NUEVA: Categorías que por defecto se asignan a esta área
+  tickets       ticket[] 
   categorias    categoria[]
 }
 
@@ -28,8 +27,9 @@ model rol {
   nombre_rol  String    @unique @db.VarChar(50)
   descripcion String?   @db.VarChar(255)
 
-  // Relación
+  // Relaciones
   usuarios    usuario[]
+  roles_permisos rol_permiso[]
 }
 
 model usuario {
@@ -44,7 +44,7 @@ model usuario {
 
   // Claves Foráneas
   id_rol                Int         @map("id_rol")
-  id_area               Int?        @map("id_area") // Nullable para Admin, Gerencia, Atencion
+  id_area               Int?        @map("id_area") 
 
   // Relaciones
   rol                   rol         @relation(fields: [id_rol], references: [id_rol])
@@ -53,7 +53,6 @@ model usuario {
   tickets_creados       ticket[]    @relation("Creador")
   tickets_responsable   ticket[]    @relation("Responsable")
   comentarios           comentario[]
-  // NUEVA: Para la trazabilidad
   historial_movimientos historial_ticket[]
 }
 
@@ -67,7 +66,7 @@ model estado {
 }
 
 // =====================================================================
-//                       MODELOS CLAVE DE NEGOCIO (NUEVOS Y AJUSTADOS)
+//                       MODELOS CLAVE DE NEGOCIO 
 // ====================================================================
 
 model categoria {
@@ -159,4 +158,28 @@ model historial_ticket {
   tipo_cambio    String    @db.VarChar(50) // Ej: "CAMBIO_ESTADO", "ASIGNACION", "COMENTARIO_AUTOMATICO"
   valor_anterior String?   @db.Text
   valor_nuevo    String?   @db.Text
+}
+
+// =====================================================================
+//                       MODELOS DE SEGURIDAD
+// ====================================================================
+
+model permiso {
+  id_permiso    Int         @id @default(autoincrement()) @map("id_permiso")
+  nombre        String      @unique @db.VarChar(50) 
+  descripcion   String?     @db.VarChar(255)
+
+  roles_permisos rol_permiso[]
+}
+
+model rol_permiso {
+  id_rol_permiso Int       @id @default(autoincrement()) @map("id_rol_permiso")
+  id_rol         Int       @map("id_rol")
+  id_permiso     Int       @map("id_permiso")
+
+  rol            rol       @relation(fields: [id_rol], references: [id_rol])
+  permiso        permiso   @relation(fields: [id_permiso], references: [id_permiso])
+
+  @@unique([id_rol, id_permiso], map: "UQ_RolPermiso")
+  @@map("rol_permiso")
 }
