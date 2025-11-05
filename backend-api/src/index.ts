@@ -16,12 +16,6 @@ app.use('/api/roles', rolRoutes);
 app.use('/api/area', areaRoutes);
 app.use('/api', authRoutes);
 
-
-// Ruta de prueba
-app.get('/', (_req, res) => {
-    res.send('Backend Jira en Express, TypeScript y Prisma/MySQL');
-});
-
 // Inicio del servidor
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

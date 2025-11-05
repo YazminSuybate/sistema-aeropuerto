@@ -9,10 +9,14 @@ export interface AuthRequest extends Request {
         email: string;
         id_rol: number;
         id_area: number;
+        permisos: string[];
     };
 }
 
-const JWT_SECRET = env("JWT_SECRET");
+const JWT_SECRET_VALUE = env("JWT_SECRET");
+if (!JWT_SECRET_VALUE) {
+    throw new Error("FATAL ERROR: JWT_SECRET no está definido.");
+}
 
 export const protect = (
     req: AuthRequest,
@@ -33,7 +37,15 @@ export const protect = (
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET as Secret) as { id: number, email: string, id_rol: number, id_area: number };
+        const decoded = jwt.verify(
+            token,
+            JWT_SECRET_VALUE as Secret) as {
+                id: number,
+                email: string,
+                id_rol: number,
+                id_area: number,
+                permisos: string[]
+            };
 
         req.user = decoded;
 

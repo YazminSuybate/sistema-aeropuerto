@@ -9,6 +9,7 @@ export interface AuthRequest extends Request {
         email: string;
         id_rol: number;
         id_area: number;
+        permisos: string[];
     };
 }
 
@@ -26,7 +27,7 @@ export class AuthController {
 
             res.cookie('refreshToken', result.refreshToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production', 
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
@@ -79,6 +80,13 @@ export class AuthController {
                 res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' });
                 return res.status(401).json({ message: 'Refresh Token inválido o revocado.' });
             }
+
+            res.cookie('refreshToken', result.refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
 
             return res.status(200).json({
                 accessToken: result.accessToken,
