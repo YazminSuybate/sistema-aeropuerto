@@ -8,7 +8,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* <Route path="/" element={<Home />} /> */}
+        <Route path="/" element={<Home />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/userManagement" element={<UserManagement />} />

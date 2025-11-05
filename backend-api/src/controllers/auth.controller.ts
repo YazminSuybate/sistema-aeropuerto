@@ -12,8 +12,6 @@ export interface AuthRequest extends Request {
         permisos: string[];
     };
 }
-
-
 export class AuthController {
     async login(req: Request, res: Response): Promise<Response> {
         const { email, password } = req.body;

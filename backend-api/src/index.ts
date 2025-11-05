@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import type { Application } from 'express';
 import userRoutes from './routes/usuario.routes.js';
 import rolRoutes from './routes/rol.routes.js';
@@ -8,12 +9,19 @@ import authRoutes from './routes/auth.routes.js';
 const app: Application = express();
 const PORT = 3000;
 
+const corsOptions = {
+    origin: 'http://localhost:5173',
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
 // Rutas de la API
 app.use('/api/usuarios', userRoutes);
 app.use('/api/roles', rolRoutes);
-app.use('/api/area', areaRoutes);
+app.use('/api/areas', areaRoutes);
 app.use('/api', authRoutes);
 
 // Inicio del servidor
