@@ -1,6 +1,6 @@
 export default function IntroAdmin() {
   return (
-    <div className="admin-panel-content">
+    <div className="admin-panel-content p-8">
       <h2 className="text-3xl font-bold mb-4" style={{ color: "var(--color-primary)" }}>
         Bienvenido al Panel Admin
       </h2>

@@ -32,3 +32,43 @@
   background-color: var(--primary-blue);
   color: var(--white);
 }
+
+.badge--info {
+  background-color: #3f51b5; 
+  color: var(--white);
+}
+
+.badge--neutral {
+  background-color: #665c5c; 
+  color: var(--white);
+}
+
+.badge--role-purple {
+  background-color: var(--role-purple);
+  color: var(--white);
+}
+
+.badge--role-teal {
+  background-color: var(--role-teal);
+  color: var(--white);
+}
+
+.badge--role-orange {
+  background-color: var(--role-orange);
+  color: var(--white);
+}
+
+.badge--role-pink {
+  background-color: var(--role-pink);
+  color: var(--white);
+}
+
+.badge--role-gray {
+  background-color: var(--role-gray);
+  color: var(--white);
+}
+
+.badge--role-red {
+  background-color: var(--role-red);
+  color: var(--white);
+}

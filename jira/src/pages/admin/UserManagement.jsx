@@ -7,30 +7,43 @@ import "../../styles/UserManagement.css";
 import Modal from "../../components/Modal";
 import UserForm from "../../components/admin/userManagement/UserForm";
 import ConfirmDialog from "../../components/ConfirmDialog";
-import { useUsers } from "../../hooks/useUsers"; 
+import { useUsers } from "../../hooks/useUsers";
+import { useRoles } from "../../hooks/useRoles";
+import { useAreas } from "../../hooks/useAreas";
+import toast, { Toaster } from 'react-hot-toast';
+
+const USERS_PER_PAGE = 5;
 
 const UserManagement = () => {
-  const { 
-    users, 
-    loading: isFetching, 
-    error, 
-    createUser, 
-    updateUser, 
-    deleteUser 
+  const {
+    users,
+    loading: isFetching,
+    error,
+    createUser,
+    updateUser,
+    deleteUser
   } = useUsers();
-  
+
+  const { loading: loadingRoles } = useRoles();
+  const { loading: loadingAreas } = useAreas();
+
+  const isDataLoading = isFetching || loadingRoles || loadingAreas;
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("Todos");
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  
-  const [isMutationLoading, setIsMutationLoading] = useState(false); 
+
+  const [isMutationLoading, setIsMutationLoading] = useState(false);
 
   const filteredUsers = useMemo(() => {
-    if (isFetching || error || !users) return [];
+    setCurrentPage(1);
+    if (isDataLoading || error || !users) return [];
 
     return users.filter((user) => {
       const matchesSearch =
@@ -43,14 +56,25 @@ const UserManagement = () => {
 
       return matchesSearch && matchesStatus;
     });
-  }, [users, searchTerm, filterStatus, isFetching, error]);
+  }, [users, searchTerm, filterStatus, isDataLoading, error]);
+
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+  const indexOfLastUser = currentPage * USERS_PER_PAGE;
+  const indexOfFirstUser = indexOfLastUser - USERS_PER_PAGE;
+  const paginatedUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
+    setCurrentPage(1);
   };
 
   const handleStatusFilter = (status) => {
     setFilterStatus(status);
+    setCurrentPage(1);
   };
 
   const formatDate = (dateString) => {
@@ -71,57 +95,114 @@ const UserManagement = () => {
   };
 
   const getRoleBadge = (role) => {
-    const variant =
-      role === "Administrador"
-        ? "primary"
-        : role === "Agente Operativo Senior" || role === "Agente Operativo Junior"
-        ? "warning"
-        : "default";
+    let variant = "default";
+    switch (role) {
+      case "Administrador":
+        variant = "role-purple"; 
+        break;
+      case "Gerencia":
+        variant = "role-teal"; 
+        break;
+      case "Agente Operativo Senior":
+        variant = "role-orange"; 
+        break;
+      case "Agente Operativo Junior":
+        variant = "role-pink"; 
+        break;
+      case "Atención al Pasajero":
+        variant = "role-gray"; 
+        break;
+      default:
+        variant = "default";
+        break;
+    }
     return <Badge variant={variant}>{role}</Badge>;
   };
 
   const handleCreateUser = async (userData) => {
     setIsMutationLoading(true);
-    try {
-      await createUser(userData); 
-      setIsCreateModalOpen(false);
-    } catch (error) {
-      console.error("Error creating user:", error);
-    } finally {
-      setIsMutationLoading(false);
-    }
+    const promise = createUser(userData);
+
+    await toast.promise(promise, {
+      loading: 'Creando usuario...',
+      success: 'Usuario creado exitosamente.',
+      error: (err) => err.message || 'Error al crear el usuario.',
+    });
+
+    setIsCreateModalOpen(false);
+    setIsMutationLoading(false);
   };
 
   const handleEditUser = async (userData) => {
     if (!selectedUser) return;
     setIsMutationLoading(true);
-    try {
-      await updateUser(selectedUser.id, userData); 
+    const promise = updateUser(selectedUser.id, userData);
 
-      setIsEditModalOpen(false);
-      setSelectedUser(null);
-    } catch (error) {
-      console.error("Error updating user:", error);
-    } finally {
-      setIsMutationLoading(false);
-    }
+    await toast.promise(promise, {
+      loading: 'Actualizando usuario...',
+      success: 'Usuario actualizado exitosamente.',
+      error: (err) => err.message || 'Error al actualizar el usuario.',
+    });
+
+    setIsEditModalOpen(false);
+    setSelectedUser(null);
+    setIsMutationLoading(false);
   };
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
     setIsMutationLoading(true);
-    try {
-      await deleteUser(selectedUser.id); 
-      
-      setIsDeleteDialogOpen(false);
-      setSelectedUser(null);
-    } catch (error) {
-      console.error("Error deleting user:", error);
-    } finally {
-      setIsMutationLoading(false);
-    }
+    const promise = deleteUser(selectedUser.id);
+
+    await toast.promise(promise, {
+      loading: 'Desactivando usuario...',
+      success: 'Usuario desactivado exitosamente (eliminación lógica).',
+      error: (err) => err.message || 'Error al desactivar el usuario.',
+    });
+
+    setIsDeleteDialogOpen(false);
+    setSelectedUser(null);
+    setIsMutationLoading(false);
   };
 
+  const PaginationControls = () => {
+    if (totalPages <= 1) return null;
+
+    const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+    return (
+      <div className="flex justify-center items-center gap-2 mt-4 p-4 border-t border-light-gray">
+        <Button
+          variant="outline"
+          size="small"
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1 || isMutationLoading}
+        >
+          Anterior
+        </Button>
+        {pageNumbers.map(number => (
+          <Button
+            key={number}
+            variant={number === currentPage ? "primary" : "outline"}
+            size="small"
+            onClick={() => handlePageChange(number)}
+            disabled={isMutationLoading}
+            className="w-8 h-8 flex justify-center items-center"
+          >
+            {number}
+          </Button>
+        ))}
+        <Button
+          variant="outline"
+          size="small"
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages || isMutationLoading}
+        >
+          Siguiente
+        </Button>
+      </div>
+    );
+  };
 
   const openEditModal = (user) => {
     setSelectedUser(user);
@@ -132,7 +213,7 @@ const UserManagement = () => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
   };
-  
+
   // Cálculo de conteos
   const totalUsers = users ? users.length : 0;
   const activeUsers = users ? users.filter((u) => u.status === "Activo").length : 0;
@@ -141,13 +222,14 @@ const UserManagement = () => {
 
   return (
     <div className="user-management-container">
+      <Toaster position="top-right" reverseOrder={false} />
       <div className="user-management">
         <div className="user-management__header">
           <h1 className="user-management__title">Gestión de Usuarios</h1>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={() => setIsCreateModalOpen(true)}
-            disabled={isFetching || isMutationLoading} 
+            disabled={isDataLoading || isMutationLoading}
           >
             <svg
               width="16"
@@ -171,7 +253,7 @@ const UserManagement = () => {
             placeholder="Buscar por nombre, email o área..."
             value={searchTerm}
             onChange={handleSearch}
-            disabled={isFetching}
+            disabled={isDataLoading}
           />
 
           <div className="filter-buttons">
@@ -179,7 +261,7 @@ const UserManagement = () => {
               variant={filterStatus === "Todos" ? "primary" : "outline"}
               size="small"
               onClick={() => handleStatusFilter("Todos")}
-              disabled={isFetching}
+              disabled={isDataLoading}
             >
               Todos ({totalUsers})
             </Button>
@@ -187,7 +269,7 @@ const UserManagement = () => {
               variant={filterStatus === "Activo" ? "secondary" : "outline"}
               size="small"
               onClick={() => handleStatusFilter("Activo")}
-              disabled={isFetching}
+              disabled={isDataLoading}
             >
               Activos ({activeUsers})
             </Button>
@@ -195,7 +277,7 @@ const UserManagement = () => {
               variant={filterStatus === "Inactivo" ? "danger" : "outline"}
               size="small"
               onClick={() => handleStatusFilter("Inactivo")}
-              disabled={isFetching}
+              disabled={isDataLoading}
             >
               Inactivos ({inactiveUsers})
             </Button>
@@ -203,11 +285,11 @@ const UserManagement = () => {
         </div>
 
         <div className="user-management__content">
-          
-          {error && <div className="error-message">Hubo un error al cargar los usuarios.</div>}
-          
-          {isFetching ? (
-            <div className="loading-state">Cargando datos de usuarios...</div>
+
+          {error && <div className="error-message">Hubo un error al cargar los usuarios: {error}</div>}
+
+          {isDataLoading ? (
+            <div className="loading-state">Cargando datos de usuarios y configuración...</div>
           ) : (
             <>
               <Table>
@@ -224,7 +306,7 @@ const UserManagement = () => {
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                  {filteredUsers.map((user) => (
+                  {paginatedUsers.map((user) => (
                     <Table.Row key={user.id}>
                       <Table.Cell>
                         {user.id}
@@ -270,7 +352,7 @@ const UserManagement = () => {
                             variant="danger"
                             size="small"
                             onClick={() => openDeleteDialog(user)}
-                            disabled={isMutationLoading}
+                            disabled={isMutationLoading || user.status === 'Inactivo'}
                           >
                             <svg
                               width="14"
@@ -291,21 +373,31 @@ const UserManagement = () => {
                 </Table.Body>
               </Table>
 
-              {filteredUsers.length === 0 && (
+              {paginatedUsers.length === 0 && filteredUsers.length > 0 && (
                 <div className="no-results">
                   <p>
-                    No se encontraron usuarios que coincidan con los criterios de
-                    búsqueda.
+                    No se encontraron usuarios en la página actual.
                   </p>
                 </div>
               )}
+
+              {filteredUsers.length === 0 && !isDataLoading && (
+                <div className="no-results">
+                  <p>
+                    No se encontraron usuarios que coincidan con los criterios de
+                    búsqueda o filtros.
+                  </p>
+                </div>
+              )}
+
+              <PaginationControls />
             </>
           )}
         </div>
 
         <Modal
           isOpen={isCreateModalOpen}
-          onClose={() => {setIsCreateModalOpen(false); setSelectedUser(null);}}
+          onClose={() => { setIsCreateModalOpen(false); setSelectedUser(null); }}
           title="Nuevo Usuario"
           size="large"
         >
@@ -318,7 +410,7 @@ const UserManagement = () => {
 
         <Modal
           isOpen={isEditModalOpen}
-          onClose={() => {setIsEditModalOpen(false); setSelectedUser(null);}}
+          onClose={() => { setIsEditModalOpen(false); setSelectedUser(null); }}
           title="Editar Usuario"
           size="large"
         >
@@ -332,11 +424,11 @@ const UserManagement = () => {
 
         <ConfirmDialog
           isOpen={isDeleteDialogOpen}
-          onClose={() => {setIsDeleteDialogOpen(false); setSelectedUser(null);}}
+          onClose={() => { setIsDeleteDialogOpen(false); setSelectedUser(null); }}
           onConfirm={handleDeleteUser}
-          title="Eliminar Usuario"
-          message={`¿Estás seguro de que deseas eliminar al usuario "${selectedUser?.fullName}"? Esta acción no se puede deshacer.`}
-          confirmText="Eliminar"
+          title="Desactivar Usuario"
+          message={`¿Estás seguro de que deseas desactivar al usuario "${selectedUser?.fullName}"? Esta acción solo lo marca como inactivo (eliminación lógica).`}
+          confirmText="Desactivar"
           cancelText="Cancelar"
           variant="danger"
           isLoading={isMutationLoading}

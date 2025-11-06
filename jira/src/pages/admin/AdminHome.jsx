@@ -31,7 +31,7 @@ export default function AdminHome() {
       <SidebarAdmin setActivePanel={setActivePanel} />
 
       {/* Contenido principal */}
-      <main className="flex-1 p-8">{renderPanel()}</main>
+      <main className="flex-1">{renderPanel()}</main>
     </div>
   );
 }

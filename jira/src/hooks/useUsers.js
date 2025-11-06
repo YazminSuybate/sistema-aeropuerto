@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { getAuthHeaders } from './useAuth';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -7,17 +7,6 @@ if (!API_BASE_URL) {
 }
 
 const API_URL = `${API_BASE_URL}/usuarios`;
-
-const getAuthHeaders = () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-        return { 'Content-Type': 'application/json' };
-    }
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-    };
-}
 
 const transformUserForFrontend = (backendUser) => {
     return {
@@ -28,8 +17,12 @@ const transformUserForFrontend = (backendUser) => {
         area: backendUser.area?.nombre_area || 'No necesita',
         status: backendUser.activo ? 'Activo' : 'Inactivo',
         registrationDate: backendUser.fecha_registro,
+
         id_rol: backendUser.id_rol,
         id_area: backendUser.id_area,
+        nombre: backendUser.nombre,
+        apellido: backendUser.apellido,
+        activo: backendUser.activo
     };
 };
 
@@ -48,12 +41,13 @@ export function useUsers() {
 
             if (response.status === 401 || response.status === 403) {
                 setError("No autorizado. Permisos insuficientes o sesión expirada.");
-                toast.error("No autorizado. Permisos insuficientes o sesión expirada.");
+                setLoading(false);
                 return;
             }
 
             if (!response.ok) {
-                throw new Error('Error al obtener los usuarios');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al obtener los usuarios');
             }
 
             const data = await response.json();
@@ -63,15 +57,12 @@ export function useUsers() {
         } catch (err) {
             console.error(err);
             setError(err.message);
-            toast.error(err.message || 'Error de red/servidor.');
         } finally {
             setLoading(false);
         }
     };
 
     const createUser = async (newUserData) => {
-        toast.error("ADVERTENCIA: La creación fallará. UserForm.jsx debe enviar id_rol e id_area.");
-
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -82,21 +73,15 @@ export function useUsers() {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Error al crear el usuario');
             }
-            const createdUser = await response.json();
-            const transformedUser = transformUserForFrontend(createdUser);
-            setUsers(prevUsers => [...prevUsers, transformedUser]);
-            toast.success("Usuario creado exitosamente.");
+
+            await fetchUsers();
         } catch (err) {
-            setError(err.message);
-            toast.error(err.message || 'Error de red/servidor.');
             throw err;
         }
     };
 
 
     const updateUser = async (id, updatedData) => {
-        toast.error("ADVERTENCIA: La actualización fallará. UserForm.jsx debe enviar id_rol e id_area.");
-
         try {
             const response = await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
@@ -107,15 +92,9 @@ export function useUsers() {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Error al actualizar el usuario');
             }
-            const updatedUser = await response.json();
 
-            setUsers(prevUsers =>
-                prevUsers.map(user => (user.id === updatedUser.id_usuario ? transformUserForFrontend(updatedUser) : user))
-            );
-            toast.success("Usuario actualizado exitosamente.");
+            await fetchUsers();
         } catch (err) {
-            setError(err.message);
-            toast.error(err.message || 'Error de red/servidor.');
             throw err;
         }
     };
@@ -128,14 +107,11 @@ export function useUsers() {
             });
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al eliminar el usuario');
+                throw new Error(errorData.message || 'Error al desactivar el usuario');
             }
 
-            setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
-            toast.success("Usuario desactivado exitosamente.");
+            await fetchUsers();
         } catch (err) {
-            setError(err.message);
-            toast.error(err.message || 'Error de red/servidor.');
             throw err;
         }
     };
