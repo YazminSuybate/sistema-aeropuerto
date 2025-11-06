@@ -54,7 +54,7 @@ export default function SidebarAdmin({ setActivePanel }) {
   };
 
   return (
-    <aside className="sidebar-admin flex flex-col items-center pt-8">
+    <aside className="sidebar-admin flex flex-col items-center pt-8 h-full">
       <img src={FotoAdmin} alt="Admin" className="admin-photo w-20 h-20 rounded-full object-cover border-2 border-secondary mb-2" />
       <div className="admin-nombre font-semibold text-dark mb-8">{name}</div>
 

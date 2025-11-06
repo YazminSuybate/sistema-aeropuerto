@@ -1,5 +1,5 @@
 .user-management {
-  padding: 24px;
+  padding: 0px 10px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -29,7 +29,6 @@
 
 .user-management-container {
   background-color: var(--light-gray);
-  min-height: 100vh;
   padding: 2rem;
 }
 

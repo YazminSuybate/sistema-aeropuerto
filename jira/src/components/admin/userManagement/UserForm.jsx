@@ -1,13 +1,31 @@
 import { useState, useEffect } from "react";
 import Button from "./Button";
 import "../../../styles/UserForm.css";
-import { roles, areas } from "../../../mocks/handlers";
+
+const allRoles = [
+  "Administrador",
+  "Gerencia",
+  "Agente Operativo Senior",
+  "Agente Operativo Junior",
+  "Atención al Pasajero",
+];
+const operativeRoles = [
+  "Agente Operativo Senior",
+  "Agente Operativo Junior",
+];
+const allAreas = [
+  "Operaciones de Vuelo",
+  "Mantenimiento",
+  "Ground Staff",
+  "Seguridad",
+  "IT / Sistemas",
+];
 
 const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    role: roles[0] || "Admin",
+    role: allRoles.includes("Atención al Pasajero") ? "Atención al Pasajero" : allRoles[0],
     area: "",
     status: "activo",
   });
@@ -19,7 +37,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
       setFormData({
         fullName: user.fullName || "",
         email: user.email || "",
-        role: user.role || roles[0] || "Admin",
+        role: user.role || allRoles[0],
         area: user.area || "",
         status: user.status || "activo",
       });
@@ -27,7 +45,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
       setFormData({
         fullName: "",
         email: "",
-        role: roles[0] || "Admin",
+        role: allRoles.includes("Atención al Pasajero") ? "Atención al Pasajero" : allRoles[0],
         area: "",
         status: "activo",
       });
@@ -48,7 +66,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
       newErrors.email = "El correo electrónico no es válido";
     }
 
-    if (formData.role === "Operativo" && !formData.area.trim()) {
+    if (operativeRoles.includes(formData.role) && !formData.area.trim()) {
       newErrors.area = "Debe seleccionar un área para roles Operativos";
     }
 
@@ -127,7 +145,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
             onChange={handleChange}
             className="form-select"
           >
-            {roles.map((role) => (
+            {allRoles.map((role) => (
               <option key={role} value={role}>
                 {role}
               </option>
@@ -147,7 +165,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading = false }) => {
             className={`form-select ${errors.area ? "form-select--error" : ""}`}
           >
             <option value="">Seleccione un área</option>
-            {areas.map((area) => (
+            {allAreas.map((area) => (
               <option key={area} value={area}>
                 {area}
               </option>

@@ -20,7 +20,7 @@ const UserManagement = () => {
   } = useUsers();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("todos");
+  const [filterStatus, setFilterStatus] = useState("Todos");
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -39,7 +39,7 @@ const UserManagement = () => {
         user.area.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
-        filterStatus === "todos" || user.status === filterStatus;
+        filterStatus === "Todos" || user.status === filterStatus;
 
       return matchesSearch && matchesStatus;
     });
@@ -63,7 +63,7 @@ const UserManagement = () => {
   };
 
   const getStatusBadge = (status) => {
-    return status === "activo" ? (
+    return status === "Activo" ? (
       <Badge variant="success">Activo</Badge>
     ) : (
       <Badge variant="danger">Inactivo</Badge>
@@ -72,9 +72,9 @@ const UserManagement = () => {
 
   const getRoleBadge = (role) => {
     const variant =
-      role === "Admin"
+      role === "Administrador"
         ? "primary"
-        : role === "Operativo"
+        : role === "Agente Operativo Senior" || role === "Agente Operativo Junior"
         ? "warning"
         : "default";
     return <Badge variant={variant}>{role}</Badge>;
@@ -135,8 +135,8 @@ const UserManagement = () => {
   
   // Cálculo de conteos
   const totalUsers = users ? users.length : 0;
-  const activeUsers = users ? users.filter((u) => u.status === "activo").length : 0;
-  const inactiveUsers = users ? users.filter((u) => u.status === "inactivo").length : 0;
+  const activeUsers = users ? users.filter((u) => u.status === "Activo").length : 0;
+  const inactiveUsers = users ? users.filter((u) => u.status === "Inactivo").length : 0;
 
 
   return (
@@ -176,25 +176,25 @@ const UserManagement = () => {
 
           <div className="filter-buttons">
             <Button
-              variant={filterStatus === "todos" ? "primary" : "outline"}
+              variant={filterStatus === "Todos" ? "primary" : "outline"}
               size="small"
-              onClick={() => handleStatusFilter("todos")}
+              onClick={() => handleStatusFilter("Todos")}
               disabled={isFetching}
             >
               Todos ({totalUsers})
             </Button>
             <Button
-              variant={filterStatus === "activo" ? "secondary" : "outline"}
+              variant={filterStatus === "Activo" ? "secondary" : "outline"}
               size="small"
-              onClick={() => handleStatusFilter("activo")}
+              onClick={() => handleStatusFilter("Activo")}
               disabled={isFetching}
             >
               Activos ({activeUsers})
             </Button>
             <Button
-              variant={filterStatus === "inactivo" ? "danger" : "outline"}
+              variant={filterStatus === "Inactivo" ? "danger" : "outline"}
               size="small"
-              onClick={() => handleStatusFilter("inactivo")}
+              onClick={() => handleStatusFilter("Inactivo")}
               disabled={isFetching}
             >
               Inactivos ({inactiveUsers})
@@ -227,7 +227,7 @@ const UserManagement = () => {
                   {filteredUsers.map((user) => (
                     <Table.Row key={user.id}>
                       <Table.Cell>
-                        #{user.id.toString().padStart(3, "0")}
+                        {user.id}
                       </Table.Cell>
                       <Table.Cell>
                         <div className="user-info">
