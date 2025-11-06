@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
-import { getAuthHeaders } from './useAuth';
+import { getAuthHeaders, handleTokenExpiry } from './useAuth';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_URL = `${API_BASE_URL}/categorias`;
@@ -26,13 +25,17 @@ export function useCategories() {
         setError(null);
         try {
             const response = await fetch(API_URL, { headers: getAuthHeaders() });
+            const tokenExpired = await handleTokenExpiry(response);
+            if (tokenExpired) {
+                return;
+            }
 
             if (!response.ok) {
                 const errorData = await response.json();
                 if (response.status === 403) {
-                    toast.error("Permisos insuficientes para cargar Categorías.");
+                    setError("No autorizado. Permisos insuficientes o sesión expirada.");
                 }
-                throw new Error(errorData.message || 'Error al obtener las categorías');
+                throw new Error(errorData.message || 'Error al obtener los usuarios');
             }
 
             const data = await response.json();

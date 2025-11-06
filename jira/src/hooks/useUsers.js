@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAuthHeaders } from './useAuth';
+import { getAuthHeaders, handleTokenExpiry } from './useAuth';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -39,18 +39,21 @@ export function useUsers() {
                 headers: getAuthHeaders(),
             });
 
-            if (response.status === 401 || response.status === 403) {
-                setError("No autorizado. Permisos insuficientes o sesión expirada.");
-                setLoading(false);
+            const tokenExpired = await handleTokenExpiry(response);
+            if (tokenExpired) {
                 return;
             }
 
             if (!response.ok) {
                 const errorData = await response.json();
+                if (response.status === 403) {
+                    setError("No autorizado. Permisos insuficientes o sesión expirada.");
+                }
                 throw new Error(errorData.message || 'Error al obtener los usuarios');
             }
 
             const data = await response.json();
+            
             const transformedUsers = data.map(transformUserForFrontend);
             setUsers(transformedUsers);
 

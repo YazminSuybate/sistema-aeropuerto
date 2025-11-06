@@ -17,13 +17,17 @@ export function useAreas() {
             const response = await fetch(API_URL, {
                 headers: getAuthHeaders(),
             });
+            const tokenExpired = await handleTokenExpiry(response);
+            if (tokenExpired) {
+                return;
+            }
 
             if (!response.ok) {
                 const errorData = await response.json();
                 if (response.status === 403) {
-                    toast.error("Permisos insuficientes para cargar Áreas (AREA_READ).");
+                    setError("No autorizado. Permisos insuficientes o sesión expirada.");
                 }
-                throw new Error(errorData.message || 'Error al obtener las áreas');
+                throw new Error(errorData.message || 'Error al obtener los usuarios');
             }
 
             const data = await response.json();
