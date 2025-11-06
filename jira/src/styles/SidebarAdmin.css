@@ -1,11 +1,15 @@
 .sidebar-admin {
-  width: 16rem; 
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  width: 16rem;
   background: linear-gradient(180deg, var(--color-light) 0%, var(--color-primary) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 2rem;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
   height: 100vh;
 }
 

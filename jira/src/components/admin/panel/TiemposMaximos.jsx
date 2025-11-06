@@ -95,11 +95,16 @@ export default function TiemposMaximos() {
       <Toaster position="top-right" reverseOrder={false} />
 
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold" style={{ color: "var(--color-dark)" }}>
+        <h2 className="text-3xl font-semibold" style={{
+          color: "var(--color-dark)",
+          fontSize: '32px',
+          fontWeight: 700,
+          margin: 0
+        }}>
           Gestión de Categorías y SLA
         </h2>
         <Button
-          variant="secondary"
+          variant="primary"
           onClick={() => setIsCreateModalOpen(true)}
           disabled={isFetching || isMutationLoading}
         >

@@ -2,6 +2,9 @@ import { useNavigate } from "react-router-dom";
 import Button from "../admin/userManagement/Button";
 import "../../styles/SidebarAdmin.css";
 import FotoAdmin from "../../assets/FotoAdmin.jpg";
+// Importar íconos de react-icons
+import { FaHome, FaUsers, FaTasks, FaClipboardList } from 'react-icons/fa';
+import { AiFillDashboard } from 'react-icons/ai';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -24,11 +27,11 @@ export default function SidebarAdmin({ setActivePanel }) {
   const name = getName();
 
   const links = [
-    { key: "intro", label: "Inicio" },
-    { key: "usuarios", label: "Gestión de Usuarios" },
-    /*{ key: "asignacion", label: "Asignación de Tareas" },*/
-    { key: "tiempos", label: "Gestion de Categorías" },
-    { key: "dashboard", label: "Dashboard Tickets" },
+    { key: "intro", label: "Inicio", icon: <FaHome /> },
+    { key: "usuarios", label: "Gestión de Usuarios", icon: <FaUsers /> },
+    /*{ key: "asignacion", label: "Asignación de Tareas", icon: <FaTasks /> },*/
+    { key: "tiempos", label: "Gestion de Categorías", icon: <FaClipboardList /> },
+    { key: "dashboard", label: "Dashboard Tickets", icon: <AiFillDashboard /> },
   ];
 
   const handleLogout = async () => {
@@ -64,9 +67,10 @@ export default function SidebarAdmin({ setActivePanel }) {
         {links.map(link => (
           <button
             key={link.key}
-            className="sidebar-link text-left"
+            className="sidebar-link text-left flex items-center gap-3" // Añadido `flex items-center gap-3` para el ícono
             onClick={() => setActivePanel(link.key)}
           >
+            {link.icon}
             {link.label}
           </button>
         ))}

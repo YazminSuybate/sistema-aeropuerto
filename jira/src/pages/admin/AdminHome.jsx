@@ -27,11 +27,13 @@ export default function AdminHome() {
 
   return (
     <div className="admin-container flex min-h-screen bg-light">
-      {/* Sidebar relativo */}
-      <SidebarAdmin setActivePanel={setActivePanel} />
+      <div className="fixed top-0 left-0 bottom-0 w-64 z-10">
+        <SidebarAdmin setActivePanel={setActivePanel} />
+      </div>
 
-      {/* Contenido principal */}
-      <main className="flex-1">{renderPanel()}</main>
+      <main className="flex-1 ml-64">
+        {renderPanel()}
+      </main>
     </div>
   );
 }
