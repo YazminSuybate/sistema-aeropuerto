@@ -8,9 +8,6 @@ import { useUsers } from "../../../hooks/useUsers";
 import Table from "../userManagement/Table";
 import "../../../styles/DashboardTickets.css";
 
-// Eliminamos la dependencia al mock server y definimos datos estáticos
-// const MOCK_BASE_URL = "http://localhost:4000"; // ELIMINADO
-
 const STATIC_METRICS = [
   { label: "Total Tickets", value: 120, color: "var(--color-primary)" },
   { label: "Tickets Abiertos", value: 45, color: "var(--color-secondary)" },
@@ -41,7 +38,7 @@ export default function DashboardTickets() {
     metrics: [],
     ticketsPrioridad: [],
     ticketsEstado: [],
-    ticketsArea: [], // Se inicializa para evitar errores
+    ticketsArea: [], 
   });
 
   const COLORS = useMemo(() => ["#5FA8D3", "#2EC4B6", "#1B4965", "#FF6B6B", "#f9a826", "#8b5cf6"], []);
@@ -71,7 +68,6 @@ export default function DashboardTickets() {
 
 
   useEffect(() => {
-    // Reemplazamos las llamadas al mock API por la asignación de datos estáticos
     if (!loadingAreas && !loadingUsers) {
       setData({
         metrics: STATIC_METRICS,
@@ -81,7 +77,6 @@ export default function DashboardTickets() {
       });
     }
 
-    // Eliminamos la función fetchData() que contenía los fetch.
   }, [loadingAreas, loadingUsers, getMockAreaTickets]);
 
   if (loadingAreas || loadingUsers) {
@@ -91,7 +86,7 @@ export default function DashboardTickets() {
 
   return (
     <div className="dashboard-tickets flex flex-col gap-6 p-8">
-      <h2 className="text-3xl font-bold mb-4" style={{ color: "var(--color-secondary)" }}>
+      <h2 className="text-3xl font-bold mb-4" style={{ color: "var(--color-dark)" }}>
         Dashboard Operativo de Tickets
       </h2>
       <p className="text-gray-700 mb-6">
@@ -112,7 +107,7 @@ export default function DashboardTickets() {
         <div className="chart-card p-6 rounded-xl shadow-lg bg-white admin-card">
           <h3 className="text-xl font-semibold mb-4">Tickets Asignados por Área</h3>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data.ticketsArea}> {/* Usar data.ticketsArea, que se inicializa con getMockAreaTickets */}
+            <BarChart data={data.ticketsArea}> 
               <XAxis dataKey="area" interval={0} angle={-30} textAnchor="end" height={60} style={{ fontSize: 12 }} />
               <YAxis />
               <Tooltip />
