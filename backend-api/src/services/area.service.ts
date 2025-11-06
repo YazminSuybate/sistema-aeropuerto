@@ -1,5 +1,6 @@
 import type { AreaRepository } from "../repositories/area.repository.js";
 import type { Area } from "../models/area.model.js";
+import { BadRequestError, NotFoundError } from "../errors/custom.error.js";
 
 export class AreaService {
     private areaRepository: AreaRepository;
@@ -15,14 +16,14 @@ export class AreaService {
     async getAreaById(id_area: number): Promise<Area> {
         const Area = await this.areaRepository.findById(id_area);
         if (!Area) {
-            throw new Error(`Area con ID ${id_area} no encontrado.`);
+            throw new NotFoundError('Area con ID ${id_area}')
         }
         return Area;
     }
 
     async createArea(data: Omit<Area, 'id_area'>): Promise<Area> {
         if (!data.nombre_area || data.nombre_area.trim() === '') {
-            throw new Error('El nombre del Area es obligatorio.');
+            throw new BadRequestError('El nombre del Area es obligatorio.');
         }
         return this.areaRepository.create(data);
     }

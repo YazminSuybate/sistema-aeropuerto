@@ -2,14 +2,15 @@ import * as bcrypt from 'bcryptjs';
 import type { UsuarioRepository } from '../repositories/usuario.repository.js';
 import type { Usuario, UsuarioCreateDTO, UsuarioUpdateDTO, UsuarioResponseDTO } from '../models/usuario.model.js';
 import type { RolRepository } from '../repositories/rol.repository.js';
+import { NotFoundError, BadRequestError } from '../errors/custom.error.js';
 
 const SALT_ROUNDS = 10;
-const AGENTE_OPERATIVO = 'Agente Operativo';
+const OPERATIVE_ROLE_NAMES = ['Agente Operativo Junior', 'Agente Operativo Senior', 'Agente Operativo'];
 
 export class UsuarioService {
     private repository: UsuarioRepository;
     private rolRepository: RolRepository;
-    private operativoRoleId: number | null = null;
+    private operativeRoleIds: Set<number> = new Set();
 
     constructor(repository: UsuarioRepository, rolRepository: RolRepository) {
         this.repository = repository;
@@ -17,8 +18,12 @@ export class UsuarioService {
     }
 
     async initialize() {
-        const operativoRole = await this.rolRepository.findByName(AGENTE_OPERATIVO);
-        this.operativoRoleId = operativoRole ? operativoRole.id_rol : null;
+        for (const name of OPERATIVE_ROLE_NAMES) {
+            const role = await this.rolRepository.findByName(name);
+            if (role) {
+                this.operativeRoleIds.add(role.id_rol);
+            }
+        }
     }
 
     async getAllUsuarios(): Promise<Usuario[]> {
@@ -30,13 +35,13 @@ export class UsuarioService {
     }
 
     async createUsuario(data: UsuarioCreateDTO): Promise<UsuarioResponseDTO> {
-        const ID_ROL_OPERATIVO = this.operativoRoleId;
+        const isOperativeRole = this.operativeRoleIds.has(data.id_rol);
 
-        if (data.id_rol === ID_ROL_OPERATIVO && !data.id_area) {
-            throw new Error('Los usuarios con rol operativo deben tener un área asignada.');
+        if (isOperativeRole && (data.id_area === undefined || data.id_area === null)) {
+            throw new BadRequestError('Los usuarios con rol operativo deben tener un área asignada.');
         }
 
-        const id_areaSource: number | null | undefined = (data.id_rol === ID_ROL_OPERATIVO) ? data.id_area : null;
+        const id_areaSource: number | null = isOperativeRole ? (data.id_area ?? null) : null;
 
         const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
 
@@ -46,7 +51,7 @@ export class UsuarioService {
             email: data.email,
             id_rol: data.id_rol,
             password: hashedPassword,
-            ...(id_areaSource !== undefined && { id_area: id_areaSource })
+            id_area: id_areaSource
         };
 
         const newUsuario = await this.repository.create(userData);
@@ -65,21 +70,21 @@ export class UsuarioService {
 
             const currentUser = await this.repository.findById(id_usuario);
             if (!currentUser) {
-                throw new Error('Usuario no encontrado para actualizar.');
+                throw new NotFoundError('Usuario');
             }
-
-            const ID_ROL_OPERATIVO = this.operativoRoleId;
 
             const rolFinal = data.id_rol ?? currentUser.id_rol;
             let areaFinal = data.id_area;
 
-            if (rolFinal === ID_ROL_OPERATIVO) {
-                if (areaFinal === undefined || areaFinal === null) {
+            const isOperativeRoleFinal = this.operativeRoleIds.has(rolFinal);
+
+            if (isOperativeRoleFinal) {
+                if (areaFinal === undefined) {
                     areaFinal = currentUser.id_area;
                 }
 
-                if (areaFinal === undefined || areaFinal === null) {
-                    throw new Error('El rol operativo requiere que se asigne un área.');
+                if (areaFinal === null) {
+                    throw new BadRequestError('El rol operativo requiere que se asigne un área.');
                 }
 
             } else {

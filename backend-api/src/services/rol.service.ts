@@ -1,5 +1,6 @@
 import type { RolRepository } from "../repositories/rol.repository.js";
 import type { Rol } from "../models/rol.model.js";
+import { BadRequestError, NotFoundError } from "../errors/custom.error.js";
 
 export class RolService {
     private rolRepository: RolRepository;
@@ -15,14 +16,14 @@ export class RolService {
     async getRolById(id_rol: number): Promise<Rol> {
         const rol = await this.rolRepository.findById(id_rol);
         if (!rol) {
-            throw new Error(`Rol con ID ${id_rol} no encontrado.`);
+            throw new NotFoundError('Rol con ID ${id_rol}')
         }
         return rol;
     }
 
     async createRol(data: Omit<Rol, 'id_rol'>): Promise<Rol> {
         if (!data.nombre_rol || data.nombre_rol.trim() === '') {
-            throw new Error('El nombre del rol es obligatorio.');
+            throw new BadRequestError("El nombre del rol es obligatorio.");
         }
         return this.rolRepository.create(data);
     }
