@@ -43,7 +43,7 @@ model usuario {
   password              String      @db.VarChar(255)
   activo                Boolean     @default(true) @db.TinyInt
   fecha_registro        DateTime    @default(now()) @db.Timestamp(0)
-  refresh_token         String?     @db.VarChar(255)
+  refresh_token         String?     @db.Text
 
   // Claves Foráneas
   id_rol                Int         @map("id_rol")
