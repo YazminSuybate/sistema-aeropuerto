@@ -84,7 +84,6 @@ const estadosData = [
 ];
 
 // Categorías de ticket por defecto (NEW)
-// Depende de que las áreas hayan sido creadas
 async function createCategorias(areaMap: Map<string, number>) {
     return [
         {

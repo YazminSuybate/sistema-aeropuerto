@@ -5,10 +5,33 @@ import {
 } from "recharts";
 import { useAreas } from "../../../hooks/useAreas";
 import { useUsers } from "../../../hooks/useUsers";
-import Table from "../userManagement/Table"; 
+import Table from "../userManagement/Table";
 import "../../../styles/DashboardTickets.css";
 
-const MOCK_BASE_URL = "http://localhost:4000";
+// Eliminamos la dependencia al mock server y definimos datos estáticos
+// const MOCK_BASE_URL = "http://localhost:4000"; // ELIMINADO
+
+const STATIC_METRICS = [
+  { label: "Total Tickets", value: 120, color: "var(--color-primary)" },
+  { label: "Tickets Abiertos", value: 45, color: "var(--color-secondary)" },
+  { label: "Tiempo Promedio (h)", value: "8.5", color: "var(--color-dark)" },
+  { label: "Tiempos Excedidos", value: 3, color: "var(--color-accent2)" },
+];
+
+const STATIC_TICKETS_ESTADO = [
+  { estado: "Abierto", value: 25 },
+  { estado: "Asignado", value: 15 },
+  { estado: "En Proceso", value: 30 },
+  { estado: "Pendiente", value: 10 },
+  { estado: "Cerrado", value: 20 },
+];
+
+const STATIC_TICKETS_PRIORIDAD = [
+  { prioridad: "Alta", value: 10 },
+  { prioridad: "Media", value: 25 },
+  { prioridad: "Baja", value: 10 },
+];
+
 
 export default function DashboardTickets() {
   const { areas, loading: loadingAreas } = useAreas();
@@ -18,6 +41,7 @@ export default function DashboardTickets() {
     metrics: [],
     ticketsPrioridad: [],
     ticketsEstado: [],
+    ticketsArea: [], // Se inicializa para evitar errores
   });
 
   const COLORS = useMemo(() => ["#5FA8D3", "#2EC4B6", "#1B4965", "#FF6B6B", "#f9a826", "#8b5cf6"], []);
@@ -39,7 +63,7 @@ export default function DashboardTickets() {
     const operativeUsers = users.filter(u => u.role.includes('Agente Operativo')).slice(0, 5);
 
     return operativeUsers.map((user, index) => ({
-      agent: user.nombre, 
+      agent: user.nombre,
       closed: 15 - index * 2,
       slaCompliance: (85 + index * 3)
     })).sort((a, b) => b.closed - a.closed);
@@ -47,32 +71,17 @@ export default function DashboardTickets() {
 
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [metricsRes, prioridadRes, estadoRes] = await Promise.all([
-          fetch(`${MOCK_BASE_URL}/metrics`),
-          fetch(`${MOCK_BASE_URL}/ticketsPrioridad`),
-          fetch(`${MOCK_BASE_URL}/ticketsEstado`)
-        ]);
-
-        const metrics = await metricsRes.json();
-        const ticketsPrioridad = await prioridadRes.json();
-        const ticketsEstado = await estadoRes.json();
-
-        setData({
-          metrics,
-          ticketsPrioridad,
-          ticketsEstado,
-          ticketsArea: getMockAreaTickets,
-        });
-      } catch (err) {
-        console.error("Error cargando datos del mock:", err);
-      }
-    };
-
+    // Reemplazamos las llamadas al mock API por la asignación de datos estáticos
     if (!loadingAreas && !loadingUsers) {
-      fetchData();
+      setData({
+        metrics: STATIC_METRICS,
+        ticketsPrioridad: STATIC_TICKETS_PRIORIDAD,
+        ticketsEstado: STATIC_TICKETS_ESTADO,
+        ticketsArea: getMockAreaTickets,
+      });
     }
+
+    // Eliminamos la función fetchData() que contenía los fetch.
   }, [loadingAreas, loadingUsers, getMockAreaTickets]);
 
   if (loadingAreas || loadingUsers) {
@@ -103,12 +112,12 @@ export default function DashboardTickets() {
         <div className="chart-card p-6 rounded-xl shadow-lg bg-white admin-card">
           <h3 className="text-xl font-semibold mb-4">Tickets Asignados por Área</h3>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={getMockAreaTickets}>
+            <BarChart data={data.ticketsArea}> {/* Usar data.ticketsArea, que se inicializa con getMockAreaTickets */}
               <XAxis dataKey="area" interval={0} angle={-30} textAnchor="end" height={60} style={{ fontSize: 12 }} />
               <YAxis />
               <Tooltip />
               <Bar dataKey="tickets" name="Tickets">
-                {getMockAreaTickets.map((entry, index) => (
+                {data.ticketsArea.map((entry, index) => (
                   <Cell key={`area-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Bar>

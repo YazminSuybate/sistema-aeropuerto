@@ -27,7 +27,7 @@ export default function SidebarAdmin({ setActivePanel }) {
     { key: "intro", label: "Inicio" },
     { key: "usuarios", label: "Gestión de Usuarios" },
     /*{ key: "asignacion", label: "Asignación de Tareas" },*/
-    { key: "tiempos", label: "Tiempos Máximos" },
+    { key: "tiempos", label: "Gestion de Categorías" },
     { key: "dashboard", label: "Dashboard Tickets" },
   ];
 
