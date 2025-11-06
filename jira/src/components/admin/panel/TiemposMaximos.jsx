@@ -1,158 +1,215 @@
 import { useState } from "react";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import toast, { Toaster } from 'react-hot-toast';
+import { useCategories } from "../../../hooks/useCategories";
+import { useAreas } from "../../../hooks/useAreas";
+import Table from "../userManagement/Table";
+import Button from "../userManagement/Button";
+import Modal from "../../Modal";
+import ConfirmDialog from "../../ConfirmDialog";
+import CategoryForm from "./CategoryForm";
 
 export default function TiemposMaximos() {
-  const [slas, setSlas] = useState([
-    { id: 1, caso: "Tiempo de respuesta de ticket", categoria: "Ticket", tiempo: 1, unidad: "Días" },
-    { id: 2, caso: "Solicitud de información", categoria: "Gerentes", tiempo: 2, unidad: "Días" },
-    { id: 3, caso: "Actualización de Dashboard de gerente", categoria: "Gerentes", tiempo: 3, unidad: "Días" },
-    { id: 4, caso: "Agente operador", categoria: "Agente", tiempo: 2, unidad: "Días" },
-  ]);
+  const {
+    categories,
+    loading: isFetching,
+    error,
+    createCategory,
+    updateCategory,
+    deleteCategory
+  } = useCategories();
 
-  const [ticketsWithTiming] = useState([
-    { id: 101, priority: "Alta", agent: "Carlos", responseRemaining: 2, resolutionRemaining: 5, state: "En progreso" },
-    { id: 102, priority: "Media", agent: "Lucía", responseRemaining: 5, resolutionRemaining: 10, state: "Pendiente" },
-    { id: 103, priority: "Baja", agent: "Pedro", responseRemaining: -1, resolutionRemaining: 0, state: "Vencido" },
-  ]);
+  const { areas } = useAreas();
 
-  const COLORS = ["#5FA8D3", "#2EC4B6", "#1B4965", "#2E2E2E"];
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [isMutationLoading, setIsMutationLoading] = useState(false);
 
-  const pieData = slas.map((sla) => ({
-    name: sla.caso,
-    value: sla.tiempo,
-  }));
-
-  const getStatusClass = (time) => {
-    if (time <= 0) return "text-red-600 font-bold";
-    if (time <= 2) return "text-yellow-600 font-semibold";
-    return "text-green-600";
+  const getAreaName = (id) => {
+    return areas.find(a => a.id_area === id)?.nombre_area || 'Área no encontrada';
   };
 
-  const formatRemaining = (time) => {
-    return time > 0 ? `${time} días` : "Vencido";
+  const handleCreateCategory = async (categoryData) => {
+    setIsMutationLoading(true);
+    const promise = createCategory(categoryData);
+
+    await toast.promise(promise, {
+      loading: 'Creando categoría...',
+      success: 'Categoría creada exitosamente.',
+      error: (err) => err.message || 'Error al crear la categoría.',
+    });
+
+    setIsCreateModalOpen(false);
+    setIsMutationLoading(false);
   };
+
+  const handleEditCategory = async (categoryData) => {
+    if (!selectedCategory) return;
+    setIsMutationLoading(true);
+    const promise = updateCategory(selectedCategory.id, categoryData);
+
+    await toast.promise(promise, {
+      loading: 'Actualizando categoría...',
+      success: 'Categoría actualizada exitosamente.',
+      error: (err) => err.message || 'Error al actualizar la categoría.',
+    });
+
+    setIsEditModalOpen(false);
+    setSelectedCategory(null);
+    setIsMutationLoading(false);
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!selectedCategory) return;
+    setIsMutationLoading(true);
+    const promise = deleteCategory(selectedCategory.id);
+
+    await toast.promise(promise, {
+      loading: 'Eliminando categoría...',
+      success: 'Categoría eliminada exitosamente.',
+      error: (err) => err.message || 'Error al eliminar la categoría.',
+    });
+
+    setIsDeleteDialogOpen(false);
+    setSelectedCategory(null);
+    setIsMutationLoading(false);
+  };
+
+  const openEditModal = (category) => {
+    setSelectedCategory(category);
+    setIsEditModalOpen(true);
+  };
+
+  const openDeleteDialog = (category) => {
+    setSelectedCategory(category);
+    setIsDeleteDialogOpen(true);
+  };
+
+  if (isFetching) {
+    return <div className="p-8 text-center text-gray-500">Cargando categorías...</div>;
+  }
 
   return (
-    <div className="admin-panel-content">
-      <h2 className="text-3xl font-semibold mb-4" style={{ color: "#1B4965" }}>
-        Tiempos Máximos de Resolución (SLA)
-      </h2>
-      <p className="mb-4 text-gray-600">
-        Definir plazos máximos para resolución de cada tipo de ticket y monitorear cumplimiento.
+    <div className="admin-panel-content p-8">
+      <Toaster position="top-right" reverseOrder={false} />
+
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-semibold" style={{ color: "var(--color-dark)" }}>
+          Gestión de Categorías y SLA
+        </h2>
+        <Button
+          variant="secondary"
+          onClick={() => setIsCreateModalOpen(true)}
+          disabled={isFetching || isMutationLoading}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nueva Categoría
+        </Button>
+      </div>
+
+      <p className="mb-8 text-gray-600">
+        Define las categorías de tickets, su prioridad por defecto y el Tiempo Máximo de Resolución (SLA) en horas, así como el área a la que serán asignados inicialmente.
       </p>
 
-      {/* Tabla SLA */}
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-4 mb-8 border" style={{ borderColor: "#E5E5E5" }}>
-        <h3 className="text-xl font-bold mb-3" style={{ color: "#2EC4B6" }}>
-          Definición de SLA
-        </h3>
-        <table className="min-w-full table-auto border-collapse">
-          <thead>
-            <tr style={{ backgroundColor: "#5FA8D3", color: "white" }}>
-              <th className="p-3 border" style={{ borderColor: "#E5E5E5" }}>Caso</th>
-              <th className="p-3 border" style={{ borderColor: "#E5E5E5" }}>Categoría</th>
-              <th className="p-3 border text-center" style={{ borderColor: "#E5E5E5" }}>Tiempo SLA</th>
-              <th className="p-3 border text-center" style={{ borderColor: "#E5E5E5" }}>Unidad</th>
-              <th className="p-3 border text-center" style={{ borderColor: "#E5E5E5" }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {slas.map((sla, index) => (
-              <tr
-                key={sla.id}
-                className="text-sm"
-                style={{ backgroundColor: index % 2 === 0 ? "#F9FAFB" : "#FFFFFF" }}
-              >
-                <td className="p-3 border" style={{ borderColor: "#E5E5E5" }}>{sla.caso}</td>
-                <td className="p-3 border" style={{ borderColor: "#E5E5E5" }}>{sla.categoria}</td>
-                <td className="p-3 border text-center" style={{ borderColor: "#E5E5E5" }}>{sla.tiempo}</td>
-                <td className="p-3 border text-center" style={{ borderColor: "#E5E5E5" }}>{sla.unidad}</td>
-                <td className="p-3 border text-center" style={{ borderColor: "#E5E5E5" }}>
-                  <button
-                    className="px-2 py-1 rounded-md mr-2 text-white"
-                    style={{ backgroundColor: "#2EC4B6" }}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="px-2 py-1 rounded-md text-white"
-                    style={{ backgroundColor: "#1B4965" }}
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {error && <div className="error-message p-4 bg-red-100 border border-red-400 text-red-700 rounded mb-4">
+        Hubo un error al cargar las categorías: {error}
+      </div>}
+
+      {/* Tabla de Categorías (CRUD) */}
+      <Table className="mb-10">
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell>ID</Table.HeaderCell>
+            <Table.HeaderCell>Categoría</Table.HeaderCell>
+            <Table.HeaderCell>Prioridad Default</Table.HeaderCell>
+            <Table.HeaderCell>SLA (Horas)</Table.HeaderCell>
+            <Table.HeaderCell>Área Asignación</Table.HeaderCell>
+            <Table.HeaderCell>Acciones</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {categories.map((cat) => (
+            <Table.Row key={cat.id}>
+              <Table.Cell>{cat.id}</Table.Cell>
+              <Table.Cell>{cat.name}</Table.Cell>
+              <Table.Cell>{cat.priority}</Table.Cell>
+              <Table.Cell>{cat.slaHours} hrs</Table.Cell>
+              <Table.Cell>{getAreaName(cat.id_area_default)}</Table.Cell>
+              <Table.Cell>
+                <div className="action-buttons">
+                  <Button variant="outline" size="small" onClick={() => openEditModal(cat)} disabled={isMutationLoading}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </Button>
+                  <Button variant="danger" size="small" onClick={() => openDeleteDialog(cat)} disabled={isMutationLoading}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3,6 5,6 21,6"></polyline>
+                      <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                    </svg>
+                  </Button>
+                </div>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+
+      {/* Sección de Monitoreo SLA */}
+      <h3 className="text-xl font-bold mb-3" style={{ color: "var(--color-secondary)" }}>
+        Monitoreo de Tickets con SLA
+      </h3>
+      <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+        <p className="text-sm">Esta sección muestra una tabla/gráfico con tickets cuyo SLA está cerca de vencer o ya ha vencido (Vencidos - Tiempos Excedidos en el Dashboard).</p>
       </div>
 
-      {/* Monitoreo SLA */}
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-4 mb-8 border" style={{ borderColor: "#E5E5E5" }}>
-        <h3 className="text-xl font-bold mb-3" style={{ color: "#2EC4B6" }}>
-          Monitoreo de Tickets
-        </h3>
-        <table className="w-full border rounded-lg shadow-md" style={{ borderColor: "#E5E5E5" }}>
-          <thead style={{ backgroundColor: "#5FA8D3", color: "white" }}>
-            <tr>
-              <th className="p-2">ID</th>
-              <th className="p-2">Prioridad</th>
-              <th className="p-2">Agente</th>
-              <th className="p-2">Tiempo Restante Respuesta</th>
-              <th className="p-2">Tiempo Restante Resolución</th>
-              <th className="p-2">Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ticketsWithTiming.map((t, index) => (
-              <tr
-                key={t.id}
-                className="hover:bg-gray-50"
-                style={{ backgroundColor: index % 2 === 0 ? "#FFFFFF" : "#F9FAFB" }}
-              >
-                <td className="p-2 border" style={{ borderColor: "#E5E5E5" }}>{t.id}</td>
-                <td className="p-2 border" style={{ borderColor: "#E5E5E5" }}>{t.priority}</td>
-                <td className="p-2 border" style={{ borderColor: "#E5E5E5" }}>{t.agent}</td>
-                <td className={`p-2 border ${getStatusClass(t.responseRemaining)}`} style={{ borderColor: "#E5E5E5" }}>
-                  {formatRemaining(t.responseRemaining)}
-                </td>
-                <td className={`p-2 border ${getStatusClass(t.resolutionRemaining)}`} style={{ borderColor: "#E5E5E5" }}>
-                  {formatRemaining(t.resolutionRemaining)}
-                </td>
-                <td className="p-2 border" style={{ borderColor: "#E5E5E5" }}>{t.state}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
-      {/* Diagrama de pastel SLA */}
-      <div className="bg-white shadow-md rounded-lg p-4 border" style={{ borderColor: "#E5E5E5" }}>
-        <h3 className="text-xl font-bold mb-3" style={{ color: "#2EC4B6" }}>
-          Distribución de SLA
-        </h3>
-        <div className="w-full h-64">
-          <ResponsiveContainer>
-            <PieChart>
-              <Pie
-                data={pieData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label
-              >
-                {pieData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {/* Modal Crear */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => { setIsCreateModalOpen(false); setSelectedCategory(null); }}
+        title="Nueva Categoría de Ticket"
+        size="medium"
+      >
+        <CategoryForm
+          onSubmit={handleCreateCategory}
+          onCancel={() => setIsCreateModalOpen(false)}
+          isLoading={isMutationLoading}
+        />
+      </Modal>
+
+      {/* Modal Editar */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => { setIsEditModalOpen(false); setSelectedCategory(null); }}
+        title={`Editar Categoría: ${selectedCategory?.name}`}
+        size="medium"
+      >
+        <CategoryForm
+          category={selectedCategory}
+          onSubmit={handleEditCategory}
+          onCancel={() => setIsEditModalOpen(false)}
+          isLoading={isMutationLoading}
+        />
+      </Modal>
+
+      {/* Dialog Eliminar */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => { setIsDeleteDialogOpen(false); setSelectedCategory(null); }}
+        onConfirm={handleDeleteCategory}
+        title="Eliminar Categoría"
+        message={`¿Estás seguro de que deseas eliminar la categoría "${selectedCategory?.name}"? Esta acción es permanente y puede afectar a tickets existentes.`}
+        confirmText="Eliminar Categoría"
+        cancelText="Cancelar"
+        variant="danger"
+        isLoading={isMutationLoading}
+      />
     </div>
   );
 }

@@ -1,82 +1,123 @@
-import { useEffect, useState } from "react";
-import "../../../styles/DashboardTickets.css";
+import { useEffect, useState, useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from "recharts";
+import { useAreas } from "../../../hooks/useAreas";
+import { useUsers } from "../../../hooks/useUsers";
+import Table from "../userManagement/Table"; 
+import "../../../styles/DashboardTickets.css";
+
+const MOCK_BASE_URL = "http://localhost:4000";
 
 export default function DashboardTickets() {
+  const { areas, loading: loadingAreas } = useAreas();
+  const { users, loading: loadingUsers } = useUsers();
+
   const [data, setData] = useState({
     metrics: [],
     ticketsPrioridad: [],
-    ticketsEstado: []
+    ticketsEstado: [],
   });
+
+  const COLORS = useMemo(() => ["#5FA8D3", "#2EC4B6", "#1B4965", "#FF6B6B", "#f9a826", "#8b5cf6"], []);
+
+  const getMockAreaTickets = useMemo(() => {
+    if (areas.length === 0) return [];
+
+    const mockDistribution = [12, 8, 20, 5, 10];
+
+    return areas.slice(0, 5).map((area, index) => ({
+      area: area.nombre_area,
+      tickets: mockDistribution[index] || 5,
+    }));
+  }, [areas]);
+
+  const getMockAgentPerformance = useMemo(() => {
+    if (users.length === 0) return [];
+
+    const operativeUsers = users.filter(u => u.role.includes('Agente Operativo')).slice(0, 5);
+
+    return operativeUsers.map((user, index) => ({
+      agent: user.nombre, 
+      closed: 15 - index * 2,
+      slaCompliance: (85 + index * 3)
+    })).sort((a, b) => b.closed - a.closed);
+  }, [users]);
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [metricsRes, prioridadRes, estadoRes] = await Promise.all([
-          fetch("http://localhost:4000/metrics"),
-          fetch("http://localhost:4000/ticketsPrioridad"),
-          fetch("http://localhost:4000/ticketsEstado")
+          fetch(`${MOCK_BASE_URL}/metrics`),
+          fetch(`${MOCK_BASE_URL}/ticketsPrioridad`),
+          fetch(`${MOCK_BASE_URL}/ticketsEstado`)
         ]);
 
         const metrics = await metricsRes.json();
         const ticketsPrioridad = await prioridadRes.json();
         const ticketsEstado = await estadoRes.json();
 
-        setData({ metrics, ticketsPrioridad, ticketsEstado });
+        setData({
+          metrics,
+          ticketsPrioridad,
+          ticketsEstado,
+          ticketsArea: getMockAreaTickets,
+        });
       } catch (err) {
-        console.error("Error cargando datos:", err);
+        console.error("Error cargando datos del mock:", err);
       }
     };
 
-    fetchData();
-  }, []);
+    if (!loadingAreas && !loadingUsers) {
+      fetchData();
+    }
+  }, [loadingAreas, loadingUsers, getMockAreaTickets]);
 
-  const COLORS = ["#5FA8D3", "#2EC4B6", "#1B4965", "#2E2E2E"];
+  if (loadingAreas || loadingUsers) {
+    return <div className="p-8 text-center text-gray-500">Cargando datos para el Dashboard...</div>;
+  }
+
 
   return (
-    <div className="dashboard-tickets flex flex-col gap-6">
+    <div className="dashboard-tickets flex flex-col gap-6 p-8">
       <h2 className="text-3xl font-bold mb-4" style={{ color: "var(--color-secondary)" }}>
-        Dashboard de Tickets
+        Dashboard Operativo de Tickets
       </h2>
       <p className="text-gray-700 mb-6">
-        Visualizar el estado de los tickets en tiempo real con métricas y gráficos de ejemplo.
+        Visualiza el estado de los tickets, la carga de trabajo por área y el rendimiento de los agentes operativos.
       </p>
 
-      {/* Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {data.metrics.map((m, i) => (
-          <div key={i} className="p-6 rounded-xl shadow-lg" style={{ backgroundColor: m.color, color: "#fff" }}>
+          <div key={i} className="p-6 rounded-xl shadow-lg admin-card" style={{ backgroundColor: m.color, color: "#fff" }}>
             <p className="text-xl font-semibold">{m.label}</p>
             <p className="text-3xl font-bold mt-2">{m.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Gráficas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {/* Bar Chart - Prioridad */}
-        <div className="chart-card p-6 rounded-xl shadow-lg bg-light">
-          <h3 className="text-xl font-semibold mb-4">Tickets por Prioridad</h3>
+
+        <div className="chart-card p-6 rounded-xl shadow-lg bg-white admin-card">
+          <h3 className="text-xl font-semibold mb-4">Tickets Asignados por Área</h3>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data.ticketsPrioridad}>
-              <XAxis dataKey="prioridad" />
+            <BarChart data={getMockAreaTickets}>
+              <XAxis dataKey="area" interval={0} angle={-30} textAnchor="end" height={60} style={{ fontSize: 12 }} />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="tickets">
-                {data.ticketsPrioridad.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Bar dataKey="tickets" name="Tickets">
+                {getMockAreaTickets.map((entry, index) => (
+                  <Cell key={`area-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Pie Chart - Estado */}
-        <div className="chart-card p-6 rounded-xl shadow-lg bg-light">
-          <h3 className="text-xl font-semibold mb-4">Tickets por Estado</h3>
+        <div className="chart-card p-6 rounded-xl shadow-lg bg-white admin-card">
+          <h3 className="text-xl font-semibold mb-4">Distribución por Estado</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -90,7 +131,7 @@ export default function DashboardTickets() {
                 label
               >
                 {data.ticketsEstado.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`estado-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Legend verticalAlign="bottom" height={36} />
@@ -99,6 +140,34 @@ export default function DashboardTickets() {
           </ResponsiveContainer>
         </div>
       </div>
+
+      <div className="mt-6 bg-white shadow-md rounded-lg p-6 admin-card">
+        <h3 className="text-xl font-bold mb-4" style={{ color: "var(--color-primary)" }}>
+          Rendimiento de Agentes Operativos (Top 5)
+        </h3>
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Agente</Table.HeaderCell>
+              <Table.HeaderCell>Tickets Cerrados (Mock)</Table.HeaderCell>
+              <Table.HeaderCell>Cumplimiento SLA (%) (Mock)</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {getMockAgentPerformance.map((p, index) => (
+              <Table.Row key={index}>
+                <Table.Cell>{p.agent}</Table.Cell>
+                <Table.Cell>{p.closed}</Table.Cell>
+                <Table.Cell className={p.slaCompliance < 90 ? 'text-yellow-600' : 'text-green-600'}>
+                  {p.slaCompliance}%
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+        <p className="text-xs text-gray-500 mt-3">*Datos de rendimiento simulados. Se requiere lógica de backend para datos reales.</p>
+      </div>
+
     </div>
   );
 }
