@@ -54,10 +54,10 @@ export default function Login() {
           case "Agente Operativo Junior":
           case "Agente Operativo Senior":
           case "Atención al Pasajero":
-            navigate("/");
+            navigate("/home");
             break;
           default:
-            navigate("/");
+            navigate("/home");
             break;
         }
       }, 1000); 

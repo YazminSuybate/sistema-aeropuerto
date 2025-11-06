@@ -1,7 +1,6 @@
 import { useState } from "react"
 import "../styles/AuthPage.css"
 import Login from "../components/auth/Login"
-import Register from "../components/auth/Register"
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -25,7 +24,7 @@ export default function AuthPage() {
 
         {/* Lado derecho: formulario */}
         <div className="auth-form flex-1 p-10 flex flex-col justify-center">
-          {isLogin ? <Login /> : <Register />}
+          <Login />
         </div>
       </div>
     </div>
