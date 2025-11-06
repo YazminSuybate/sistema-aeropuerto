@@ -26,6 +26,27 @@ const permissionsData = [
     { nombre: 'AREA_UPDATE', descripcion: 'Permite actualizar áreas existentes.' },
     { nombre: 'AREA_DELETE', descripcion: 'Permite eliminar áreas.' },
 
+    // Permisos de Categoría (NEW)
+    { nombre: 'CATEGORIA_READ', descripcion: 'Permite listar todas las categorías.' },
+    { nombre: 'CATEGORIA_READ_ID', descripcion: 'Permite ver el detalle de una categoría.' },
+    { nombre: 'CATEGORIA_CREATE', descripcion: 'Permite crear nuevas categorías.' },
+    { nombre: 'CATEGORIA_UPDATE', descripcion: 'Permite actualizar categorías existentes.' },
+    { nombre: 'CATEGORIA_DELETE', descripcion: 'Permite eliminar categorías.' },
+
+    // Permisos de Estado (NEW)
+    { nombre: 'ESTADO_READ', descripcion: 'Permite listar todos los estados.' },
+    { nombre: 'ESTADO_READ_ID', descripcion: 'Permite ver el detalle de un estado.' },
+    { nombre: 'ESTADO_CREATE', descripcion: 'Permite crear nuevos estados.' },
+    { nombre: 'ESTADO_UPDATE', descripcion: 'Permite actualizar estados existentes.' },
+    { nombre: 'ESTADO_DELETE', descripcion: 'Permite eliminar estados.' },
+
+    // Permisos de Pasajero (NEW)
+    { nombre: 'PASAJERO_READ', descripcion: 'Permite listar todos los pasajeros.' },
+    { nombre: 'PASAJERO_READ_ID', descripcion: 'Permite ver el detalle de un pasajero.' },
+    { nombre: 'PASAJERO_CREATE', descripcion: 'Permite crear nuevos pasajeros.' },
+    { nombre: 'PASAJERO_UPDATE', descripcion: 'Permite actualizar pasajeros existentes.' },
+    { nombre: 'PASAJERO_DELETE', descripcion: 'Permite eliminar pasajeros.' },
+
     // // Permisos relacionados con Tickets (esquema simplificado, se expandirá en el futuro)
     // { nombre: 'TICKET_READ_ALL', descripcion: 'Permite leer todos los tickets.' },
     // { nombre: 'TICKET_CREATE', descripcion: 'Permite crear tickets.' },
@@ -52,11 +73,56 @@ const areasData = [
     { nombre_area: 'IT / Sistemas', descripcion: 'Soporte técnico a usuarios, administración de la infraestructura de red, sistemas de vuelo y resolución de problemas de software.' },
 ];
 
+// Estados de ticket por defecto (NEW)
+const estadosData = [
+    { nombre_estado: 'Abierto', descripcion: 'El ticket ha sido creado.' },
+    { nombre_estado: 'Asignado', descripcion: 'El ticket ha sido tomado por un agente.' },
+    { nombre_estado: 'En Proceso', descripcion: 'El agente está trabajando activamente en la solución.' },
+    { nombre_estado: 'Pendiente', descripcion: 'Esperando información del pasajero o de otra área.' },
+    { nombre_estado: 'Resuelto', descripcion: 'El ticket ha sido resuelto y está pendiente de cierre.' },
+    { nombre_estado: 'Cerrado', descripcion: 'El ticket ha sido completado y finalizado.' },
+];
+
+// Categorías de ticket por defecto (NEW)
+// Depende de que las áreas hayan sido creadas
+async function createCategorias(areaMap: Map<string, number>) {
+    return [
+        {
+            nombre_categoria: 'Fallo de Sistema Crítico',
+            prioridad: 'Alta',
+            sla_horas: 4,
+            id_area_default: areaMap.get('IT / Sistemas')!,
+        },
+        {
+            nombre_categoria: 'Problema de Equipaje',
+            prioridad: 'Media',
+            sla_horas: 24,
+            id_area_default: areaMap.get('Ground Staff')!,
+        },
+        {
+            nombre_categoria: 'Mantenimiento de Aeronave (Rutina)',
+            prioridad: 'Baja',
+            sla_horas: 72,
+            id_area_default: areaMap.get('Mantenimiento')!,
+        },
+        {
+            nombre_categoria: 'Incidente de Seguridad',
+            prioridad: 'Alta',
+            sla_horas: 2,
+            id_area_default: areaMap.get('Seguridad')!,
+        },
+    ];
+}
+
+
 async function main() {
     console.log('Iniciando el proceso de seeding...');
 
     // --- 1. Limpiar la base de datos ---
     await prisma.rol_permiso.deleteMany();
+    await prisma.categoria.deleteMany(); // NEW
+    await prisma.estado.deleteMany(); // NEW
+    await prisma.pasajero.deleteMany(); // NEW
 
     await prisma.usuario.deleteMany();
     await prisma.permiso.deleteMany();
@@ -94,7 +160,7 @@ async function main() {
         id_permiso: p.id_permiso,
     }));
 
-    // Permisos básicos para Gerencia (Solo lectura general)
+    // Permisos básicos para Gerencia (Solo lectura general de Usuarios, Roles, Áreas, Categorías, Estados, Pasajeros)
     const gerenciaPermissions = createdPermisos
         .filter(p => p.nombre.includes('_READ') && !p.nombre.includes('_ID'))
         .map(p => ({
@@ -102,26 +168,11 @@ async function main() {
             id_permiso: p.id_permiso,
         }));
 
-    // // Permisos para Agentes Operativos (Tickets y su área)
-    // const agentePermissions = createdPermisos
-    //     .filter(p => p.nombre.startsWith('TICKET_') || p.nombre === 'AREA_READ')
-    //     .map(p => ({
-    //         id_rol: rolMap.get('Agente Operativo Senior')!,
-    //         id_permiso: p.id_permiso,
-    //     }));
-
-    // // Los Junior tendrán permisos de operativo.
-    // const juniorPermissions = agentePermissions.map(p => ({
-    //     id_rol: rolMap.get('Agente Operativo Junior')!,
-    //     id_permiso: p.id_permiso,
-    // }));
-
 
     const allRolePermissions = [
         ...adminPermissions,
         ...gerenciaPermissions,
-        // ...agentePermissions,
-        // ...juniorPermissions,
+        // Permisos de tickets se pueden agregar después si se necesita
     ];
 
     await prisma.rol_permiso.createMany({
@@ -130,7 +181,32 @@ async function main() {
     });
     console.log(`Creadas ${allRolePermissions.length} asignaciones de rol-permiso.`);
 
-    // --- 6. Crear Usuarios por Defecto ---
+    // --- 6. Crear Estados de Ticket por defecto (NEW) ---
+    const createdEstados = await prisma.estado.createMany({
+        data: estadosData,
+        skipDuplicates: true,
+    });
+    console.log(`Creados ${createdEstados.count} estados de ticket.`);
+
+    // --- 7. Crear Categorías de Ticket por defecto (NEW) ---
+    const categoriasToCreate = await createCategorias(areaMap);
+    const createdCategorias = await prisma.categoria.createMany({
+        data: categoriasToCreate,
+        skipDuplicates: true,
+    });
+    console.log(`Creadas ${createdCategorias.count} categorías de ticket.`);
+
+    // --- 8. Crear Pasajeros de prueba (NEW) ---
+    await prisma.pasajero.createMany({
+        data: [
+            { nombre: 'Juan', documento_id: 'PA123456', info_contacto: 'juan.p@mail.com' },
+            { nombre: 'Ana', documento_id: 'PA987654', info_contacto: 'ana.s@mail.com' },
+        ],
+        skipDuplicates: true,
+    });
+    console.log('Pasajeros de prueba creados.');
+
+    // --- 9. Crear Usuarios por Defecto (Original) ---
 
     const hashedPassword = await bcrypt.hash('admin123', SALT_ROUNDS);
 
@@ -161,7 +237,7 @@ async function main() {
                 password: hashedPassword,
                 activo: true,
                 id_rol: rolMap.get('Agente Operativo Senior')!,
-                id_area: areaMap.get('Mantenimiento')!, 
+                id_area: areaMap.get('Mantenimiento')!,
             },
             {
                 nombre: 'Lucia',
@@ -170,7 +246,7 @@ async function main() {
                 password: hashedPassword,
                 activo: true,
                 id_rol: rolMap.get('Agente Operativo Junior')!,
-                id_area: areaMap.get('Mantenimiento')!, 
+                id_area: areaMap.get('Mantenimiento')!,
             },
         ],
         skipDuplicates: true,

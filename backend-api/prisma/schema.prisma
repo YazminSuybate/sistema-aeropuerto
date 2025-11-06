@@ -92,7 +92,7 @@ model categoria {
 model pasajero {
   id_pasajero   Int         @id @default(autoincrement()) @map("id_pasajero")
   nombre        String      @db.VarChar(100)
-  documento_id  String      @db.VarChar(50)
+  documento_id  String      @unique @db.VarChar(50) 
   info_contacto String?     @db.VarChar(255)
 
   tickets       ticket[]

@@ -5,6 +5,9 @@ import userRoutes from './routes/usuario.routes.js';
 import rolRoutes from './routes/rol.routes.js';
 import areaRoutes from './routes/area.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import categoriaRoutes from './routes/categoria.routes.js';
+import estadoRoutes from './routes/estado.routes.js';
+import pasajeroRoutes from './routes/pasajero.routes.js';
 
 const app: Application = express();
 const PORT = 3000;
@@ -22,6 +25,9 @@ app.use(express.json());
 app.use('/api/usuarios', userRoutes);
 app.use('/api/roles', rolRoutes);
 app.use('/api/areas', areaRoutes);
+app.use('/api/categorias', categoriaRoutes);
+app.use('/api/estados', estadoRoutes);
+app.use('/api/pasajeros', pasajeroRoutes);
 app.use('/api', authRoutes);
 
 // Inicio del servidor
