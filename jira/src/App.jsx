@@ -5,13 +5,13 @@ import AdminHome from "./pages/admin/AdminHome";
 import UserManagement from "./pages/admin/UserManagement";
 import ProtectedRoute from "../src/components/ProtectedRoute";
 import NotFoundPage from "./pages/NotFound";
-
+import { BandejaOperativoPage } from "./pages/BandejaOperativoPage";
 export default function App() {
   return (
     <Router>
       <Routes>
         <Route path="/home" element={<Home />} />
-
+<Route path="/bandeja" element={<BandejaOperativoPage />} />
         <Route path="/" element={<Navigate to="/auth" replace />} />
         <Route path="/auth" element={<AuthPage />} />
 
