@@ -2,7 +2,6 @@ import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import type { Secret } from 'jsonwebtoken';
 import { env } from 'prisma/config';
-import { TokenExpiredError } from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
     user?: {
@@ -53,7 +52,7 @@ export const protect = (
         next();
 
     } catch (error) {
-        if (error instanceof TokenExpiredError) {
+        if (error instanceof jwt.TokenExpiredError) {
             console.error('Error al verificar token: TokenExpiredError: jwt expired');
             return res.status(401).json({
                 message: 'Su sesión ha expirado. Por favor, vuelva a iniciar sesión.',
