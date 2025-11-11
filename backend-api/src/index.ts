@@ -9,6 +9,10 @@ import categoriaRoutes from './routes/categoria.routes.js';
 import estadoRoutes from './routes/estado.routes.js';
 import pasajeroRoutes from './routes/pasajero.routes.js';
 
+//import Jesus
+import comentariosRoutes from './routes/comentarios.routes.js';
+import histoticketRoutes from './routes/historialtickets.routes.js';
+
 const app: Application = express();
 const PORT = 3000;
 
@@ -29,6 +33,10 @@ app.use('/api/categorias', categoriaRoutes);
 app.use('/api/estados', estadoRoutes);
 app.use('/api/pasajeros', pasajeroRoutes);
 app.use('/api', authRoutes);
+
+//Jesus-(Comentarios,HistorialTickets)
+app.use('/api/comentarios', comentariosRoutes);
+app.use('/api/historialtickets', histoticketRoutes);
 
 // Inicio del servidor
 app.listen(PORT, () => {
