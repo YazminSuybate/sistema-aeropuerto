@@ -140,7 +140,7 @@ async function main() {
         'permiso',
         'rol',
         'area',
-        'comentario', // Añade las tablas que faltaban
+        'comentario',
         'evidencia',
         'historial_ticket',
         'liberacion_ticket',
@@ -188,7 +188,7 @@ async function main() {
         id_permiso: p.id_permiso,
     }));
 
-    // Permisos básicos para Gerencia (Solo lectura general de Usuarios, Roles, Áreas, Categorías, Estados, Pasajeros)
+    // Permisos básicos para Gerencia 
     const gerenciaPermissions = createdPermisos
         .filter(p => p.nombre.includes('_READ') && !p.nombre.includes('_ID'))
         .map(p => ({
@@ -221,34 +221,32 @@ async function main() {
         id_permiso: permisoId,
     }));
 
-    // --- ¡ESTA ES LA SECCIÓN NUEVA QUE ARREGLA EL 403! ---
-  // Permisos para Atención al Pasajero
-  const atencionPermissionNames = [
-    'TICKET_CREATE',      // Puede crear tickets
-    'TICKET_READ_ALL',    // Puede ver la lista de tickets
-    'TICKET_READ_ID',     // Puede ver el detalle de un ticket
-    'TICKET_UPDATE',      // Necesario para añadir comentarios
-    'CATEGORIA_READ',   // Necesario para el formulario de creación
-    'PASAJERO_READ',    // Necesario para el formulario de creación
-    'ESTADO_READ',      // <-- ¡ESTE ES EL PERMISO QUE FALTABA!
-  ];
+    // Permisos para Atención al Pasajero
+    const atencionPermissionNames = [
+        'TICKET_CREATE',      // Puede crear tickets
+        'TICKET_READ_ALL',    // Puede ver la lista de tickets
+        'TICKET_READ_ID',     // Puede ver el detalle de un ticket
+        'TICKET_UPDATE',      // Necesario para añadir comentarios
+        'CATEGORIA_READ',   // Necesario para el formulario de creación
+        'PASAJERO_READ',    // Necesario para el formulario de creación
+        'ESTADO_READ',      // <-- ¡ESTE ES EL PERMISO QUE FALTABA!
+    ];
 
-  const atencionPermisoIds = atencionPermissionNames
-    .map(nombre => permisoMap.get(nombre)!) // '!' asegura que existe
-    .filter(id => id !== undefined); // Filtra por si acaso
+    const atencionPermisoIds = atencionPermissionNames
+        .map(nombre => permisoMap.get(nombre)!)
+        .filter(id => id !== undefined);
 
-  const atencionPermissions = atencionPermisoIds.map(permisoId => ({
-    id_rol: rolMap.get('Atención al Pasajero')!,
-    id_permiso: permisoId,
-  }));
-  // --- FIN DE LA SECCIÓN NUEVA ---
+    const atencionPermissions = atencionPermisoIds.map(permisoId => ({
+        id_rol: rolMap.get('Atención al Pasajero')!,
+        id_permiso: permisoId,
+    }));
 
     const allRolePermissions = [
         ...adminPermissions,
         ...gerenciaPermissions,
         ...seniorTicketPermissions,
         ...juniorTicketPermissions,
-        ...atencionPermissions, // <-- AÑADIDO
+        ...atencionPermissions,
     ];
 
     await prisma.rol_permiso.createMany({
@@ -263,7 +261,7 @@ async function main() {
         skipDuplicates: true,
     });
     console.log(`Creados ${createdEstados.count} estados de ticket.`);
-    // --- NUEVO: Crear Map para estados ---
+
     const estadoAbierto = await prisma.estado.findFirst({ where: { nombre_estado: 'Abierto' } });
     const estadoAbiertoId = estadoAbierto!.id_estado;
 
@@ -289,7 +287,6 @@ async function main() {
     console.log('Pasajeros de prueba creados.');
 
     // --- 9. Crear Usuarios por Defecto (Original) ---
-
     const hashedPassword = await bcrypt.hash('admin123', SALT_ROUNDS);
 
     const adminUser = {
@@ -329,29 +326,25 @@ async function main() {
         id_area: areaMap.get('Mantenimiento')!,
     };
 
-     // --- NUEVO USUARIO DE ATENCIÓN ---
-    const atencionUser = {
-        nombre: 'Ana',
-        apellido: 'Atencion',
-        email: 'ana.atencion@aeropuerto.com',
-        password: hashedPassword,
-        activo: true,
-        id_rol: rolMap.get('Atención al Pasajero')!,
-        // Asignamos al área 'Ground Staff' que parece la más lógica
-        id_area: areaMap.get('Ground Staff')!, 
-    };
-    // --- FIN DE NUEVO USUARIO ---
-
+    const atencionUser = {
+        nombre: 'Ana',
+        apellido: 'Atencion',
+        email: 'ana.atencion@aeropuerto.com',
+        password: hashedPassword,
+        activo: true,
+        id_rol: rolMap.get('Atención al Pasajero')!,
+        id_area: null,
+    };
 
     await prisma.usuario.createMany({
         data: [adminUser, gerenciaUser, seniorUser, juniorUser, atencionUser],
         skipDuplicates: true,
     });
     console.log('Usuarios por defecto creados.');
-    // --- NUEVO: Obtener IDs de usuarios creados ---
+
     const userAdmin = await prisma.usuario.findFirst({ where: { email: adminUser.email } });
 
-    // --- 10. (NUEVO) Crear Tickets de Ejemplo (PUNTO 3) ---
+    // --- 10. Crear Tickets de Ejemplo ---
     console.log('Creando tickets de ejemplo...');
     await prisma.ticket.createMany({
         data: [

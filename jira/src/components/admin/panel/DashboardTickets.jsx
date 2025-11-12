@@ -38,7 +38,7 @@ export default function DashboardTickets() {
     metrics: [],
     ticketsPrioridad: [],
     ticketsEstado: [],
-    ticketsArea: [], 
+    ticketsArea: [],
   });
 
   const COLORS = useMemo(() => ["#5FA8D3", "#2EC4B6", "#1B4965", "#FF6B6B", "#f9a826", "#8b5cf6"], []);
@@ -107,7 +107,7 @@ export default function DashboardTickets() {
         <div className="chart-card p-6 rounded-xl shadow-lg bg-white admin-card">
           <h3 className="text-xl font-semibold mb-4">Tickets Asignados por Área</h3>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data.ticketsArea}> 
+            <BarChart data={data.ticketsArea}>
               <XAxis dataKey="area" interval={0} angle={-30} textAnchor="end" height={60} style={{ fontSize: 12 }} />
               <YAxis />
               <Tooltip />
@@ -153,8 +153,8 @@ export default function DashboardTickets() {
           <Table.Header>
             <Table.Row>
               <Table.HeaderCell>Agente</Table.HeaderCell>
-              <Table.HeaderCell>Tickets Cerrados (Mock)</Table.HeaderCell>
-              <Table.HeaderCell>Cumplimiento SLA (%) (Mock)</Table.HeaderCell>
+              <Table.HeaderCell>Tickets Cerrados</Table.HeaderCell>
+              <Table.HeaderCell>Cumplimiento SLA (%)</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -169,7 +169,6 @@ export default function DashboardTickets() {
             ))}
           </Table.Body>
         </Table>
-        <p className="text-xs text-gray-500 mt-3">*Datos de rendimiento simulados. Se requiere lógica de backend para datos reales.</p>
       </div>
 
     </div>

@@ -25,7 +25,7 @@ export default function App() {
           <Route path="/admin" element={<AdminHome />} />
         </Route>
 
-        {/* --- RUTA DE ATENCIÓN AL PASAJERO (NUEVA) --- */}
+        {/* --- RUTA DE ATENCIÓN AL PASAJERO --- */}
         <Route
           element={
             <ProtectedRoute allowedRoles={["Atención al Pasajero"]} />

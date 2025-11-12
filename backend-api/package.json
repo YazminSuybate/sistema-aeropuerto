@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "node --loader ts-node/esm src/index.ts",
+    "dev": "tsx src/index.ts",
     "build": "npm run tsc && npx prisma generate",
     "start": "npx prisma migrate deploy && npx prisma db seed && node build/src/index.js",
     "tsc": "tsc",

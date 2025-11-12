@@ -10,7 +10,7 @@ const STATIC_OPERATIONAL_INFO = [
   { label: "Total Roles Definidos", value: 5, icon: "👤" },
   { label: "Total Áreas Operacionales", value: 5, icon: "🏢" },
   { label: "Categorías de Ticket (SLA)", value: 4, icon: "🏷️" },
-  { label: "Pasajeros Registrados (Simul.)", value: 120, icon: "🎫" },
+  { label: "Pasajeros Registrados", value: 120, icon: "🎫" },
 ];
 
 export default function IntroAdmin({ setActivePanel }) {

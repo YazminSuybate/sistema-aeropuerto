@@ -14,7 +14,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
     apellido: "",
     email: "",
     password: "",
-    activo: true, 
+    activo: true,
     id_rol: "",
     id_area: "",
   }), []);
@@ -25,19 +25,19 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
   useEffect(() => {
     if (user) {
       setFormData({
-        nombre: user.nombre || "", 
-        apellido: user.apellido || "", 
+        nombre: user.nombre || "",
+        apellido: user.apellido || "",
         email: user.email || "",
-        password: "", 
-        activo: user.activo, 
+        password: "",
+        activo: user.activo,
         id_rol: user.id_rol || "",
         id_area: user.id_area || "",
       });
     } else {
       setFormData({
         ...initialFormData,
-        id_rol: roles.length > 0 
-          ? roles.find(r => r.nombre_rol === 'Atención al Pasajero')?.id_rol || roles[0].id_rol 
+        id_rol: roles.length > 0
+          ? roles.find(r => r.nombre_rol === 'Atención al Pasajero')?.id_rol || roles[0].id_rol
           : '',
       });
     }
@@ -64,11 +64,11 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "El correo electrónico no es válido";
     }
-    
+
     if (!user && !formData.password.trim()) {
-        newErrors.password = "La contraseña es requerida para el nuevo usuario";
+      newErrors.password = "La contraseña es requerida para el nuevo usuario";
     } else if (formData.password.trim() && formData.password.trim().length < 8) {
-        newErrors.password = "La contraseña debe tener al menos 8 caracteres";
+      newErrors.password = "La contraseña debe tener al menos 8 caracteres";
     }
 
     if (!formData.id_rol) {
@@ -86,31 +86,31 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-        const dataToSend = {
-            nombre: formData.nombre,
-            apellido: formData.apellido,
-            email: formData.email,
-            id_rol: Number(formData.id_rol),
-            
-            ...(user && { activo: formData.activo }),
-        };
+      const dataToSend = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        email: formData.email,
+        id_rol: Number(formData.id_rol),
 
-        if (formData.password.trim()) {
-            dataToSend.password = formData.password.trim();
-        }
+        ...(user && { activo: formData.activo }),
+      };
 
-        const finalAreaId = isOperativeRole && formData.id_area ? Number(formData.id_area) : null;
-        dataToSend.id_area = finalAreaId;
+      if (formData.password.trim()) {
+        dataToSend.password = formData.password.trim();
+      }
 
-        const finalData = user ? Object.fromEntries(
-             Object.entries(dataToSend).filter(([key, value]) => {
-                if (key === 'password' && !value) return false;
-                
-                if (key === 'id_area' || key === 'id_rol' || key === 'activo') return true; 
+      const finalAreaId = isOperativeRole && formData.id_area ? Number(formData.id_area) : null;
+      dataToSend.id_area = finalAreaId;
 
-                return value !== '';
-            })
-        ) : dataToSend;
+      const finalData = user ? Object.fromEntries(
+        Object.entries(dataToSend).filter(([key, value]) => {
+          if (key === 'password' && !value) return false;
+
+          if (key === 'id_area' || key === 'id_rol' || key === 'activo') return true;
+
+          return value !== '';
+        })
+      ) : dataToSend;
 
 
       onSubmit(finalData);
@@ -119,25 +119,25 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     let newValue = value;
     if (name === 'activo' && type === 'checkbox') {
-        newValue = checked;
+      newValue = checked;
     } else if (name === 'id_rol' || name === 'id_area') {
-        newValue = value === "" ? "" : Number(value); 
+      newValue = value === "" ? "" : Number(value);
     }
-    
+
     if (name === 'id_rol') {
-        const selectedRoleId = Number(newValue);
-        if (!operativeRoleIds.includes(selectedRoleId)) {
-            setFormData((prev) => ({
-              ...prev,
-              id_area: "", 
-              [name]: newValue,
-            }));
-             setErrors(prev => ({...prev, id_area: ""}));
-            return;
-        }
+      const selectedRoleId = Number(newValue);
+      if (!operativeRoleIds.includes(selectedRoleId)) {
+        setFormData((prev) => ({
+          ...prev,
+          id_area: "",
+          [name]: newValue,
+        }));
+        setErrors(prev => ({ ...prev, id_area: "" }));
+        return;
+      }
     }
 
 
@@ -157,7 +157,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
   if (isDataLoading) {
     return <div className="p-4 text-center text-gray-500">Cargando configuración de roles y áreas...</div>;
   }
-  
+
   if (roles.length === 0 || areas.length === 0) {
     return <div className="p-4 text-center text-red-500">Error: No se pudieron cargar datos de Roles o Áreas. Verifique la conexión o permisos (ROL_READ/AREA_READ).</div>;
   }
@@ -183,7 +183,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
             <span className="form-error">{errors.nombre}</span>
           )}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="apellido" className="form-label">
             Apellido *
@@ -222,7 +222,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
 
         <div className="form-group">
           <label htmlFor="password" className="form-label">
-            Contraseña {user ? "(Dejar vacío para no cambiar)" : "*"}
+            Contraseña {user ? "" : "*"}
           </label>
           <input
             type="password"
@@ -232,7 +232,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
             onChange={handleChange}
             className={`form-input ${errors.password ? "form-input--error" : ""}`}
             placeholder={user ? "********" : "Mínimo 8 caracteres"}
-            disabled={isMutationLoading}
+            disabled={!!user || isMutationLoading}
           />
           {errors.password && <span className="form-error">{errors.password}</span>}
         </div>
@@ -280,22 +280,22 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading: isMutationLoading = fal
           </select>
           {errors.id_area && <span className="form-error">{errors.id_area}</span>}
         </div>
-        
+
         {user && (
-            <div className="form-group form-group--full">
-                <label htmlFor="activo" className="form-label cursor-pointer flex items-center gap-2">
-                    <input
-                        type="checkbox"
-                        id="activo"
-                        name="activo"
-                        checked={formData.activo}
-                        onChange={handleChange}
-                        disabled={isMutationLoading}
-                        className="h-4 w-4 text-primary-blue border-gray-300 rounded"
-                    />
-                    <span>Usuario Activo</span>
-                </label>
-            </div>
+          <div className="form-group form-group--full">
+            <label htmlFor="activo" className="form-label cursor-pointer flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="activo"
+                name="activo"
+                checked={formData.activo}
+                onChange={handleChange}
+                disabled={isMutationLoading}
+                className="h-4 w-4 text-primary-blue border-gray-300 rounded"
+              />
+              <span>Usuario Activo</span>
+            </label>
+          </div>
         )}
       </div>
 

@@ -35,11 +35,9 @@ app.use("/api/categorias", categoriaRoutes);
 app.use("/api/estados", estadoRoutes);
 app.use("/api/pasajeros", pasajeroRoutes);
 app.use("/api/tickets", ticketRoutes);
-app.use("/api", authRoutes);
-
-//Jesus-(Comentarios,HistorialTickets)
 app.use('/api/comentarios', comentariosRoutes);
 app.use('/api/historialtickets', histoticketRoutes);
+app.use("/api", authRoutes);
 
 // Inicio del servidor
 app.listen(PORT, () => {

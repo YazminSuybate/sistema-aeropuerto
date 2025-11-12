@@ -166,12 +166,12 @@ export default function TiemposMaximos() {
       </Table>
 
       {/* Sección de Monitoreo SLA */}
-      <h3 className="text-xl font-bold mb-3" style={{ color: "var(--color-secondary)" }}>
+      {/* <h3 className="text-xl font-bold mb-3" style={{ color: "var(--color-secondary)" }}>
         Monitoreo de Tickets con SLA
       </h3>
       <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
         <p className="text-sm">Esta sección muestra una tabla/gráfico con tickets cuyo SLA está cerca de vencer o ya ha vencido (Vencidos - Tiempos Excedidos en el Dashboard).</p>
-      </div>
+      </div> */}
 
 
       {/* Modal Crear */}

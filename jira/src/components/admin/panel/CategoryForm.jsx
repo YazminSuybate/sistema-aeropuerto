@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import Button from "../userManagement/Button";
-import "../../../styles/UserForm.css"; 
+import "../../../styles/UserForm.css";
 import { useAreas } from "../../../hooks/useAreas";
 
 const PRIORITY_OPTIONS = ["Alta", "Media", "Baja", "Muy Baja"];
@@ -151,6 +151,7 @@ const CategoryForm = ({ category, onSubmit, onCancel, isLoading: isMutationLoadi
                         type="number"
                         id="sla_horas"
                         name="sla_horas"
+                        min="1"
                         value={formData.sla_horas}
                         onChange={handleChange}
                         className={`form-input ${errors.sla_horas ? "form-input--error" : ""}`}
