@@ -11,6 +11,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import ProtectedRoute from "../src/components/ProtectedRoute";
 import NotFoundPage from "./pages/NotFound";
 import { BandejaOperativoPage } from "./pages/BandejaOperativoPage";
+import AtencionPasajeroPage from "./pages/AtencionPasajeroPage";
 export default function App() {
   return (
     <Router>
@@ -22,6 +23,15 @@ export default function App() {
 
         <Route element={<ProtectedRoute allowedRoles={["Administrador"]} />}>
           <Route path="/admin" element={<AdminHome />} />
+        </Route>
+
+        {/* --- RUTA DE ATENCIÓN AL PASAJERO (NUEVA) --- */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["Atención al Pasajero"]} />
+          }
+        >
+          <Route path="/atencion" element={<AtencionPasajeroPage />} />
         </Route>
 
         <Route

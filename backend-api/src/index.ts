@@ -11,6 +11,10 @@ import pasajeroRoutes from "./routes/pasajero.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
 import { env } from 'prisma/config';
 
+//import Jesus
+import comentariosRoutes from './routes/comentarios.routes.js';
+import histoticketRoutes from './routes/historialtickets.routes.js';
+
 const app: Application = express();
 const PORT = 3000;
 
@@ -32,6 +36,10 @@ app.use("/api/estados", estadoRoutes);
 app.use("/api/pasajeros", pasajeroRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api", authRoutes);
+
+//Jesus-(Comentarios,HistorialTickets)
+app.use('/api/comentarios', comentariosRoutes);
+app.use('/api/historialtickets', histoticketRoutes);
 
 // Inicio del servidor
 app.listen(PORT, () => {

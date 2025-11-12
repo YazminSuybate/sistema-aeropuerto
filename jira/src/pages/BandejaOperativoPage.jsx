@@ -4,6 +4,10 @@ import Button from "../components/admin/userManagement/Button";
 import { Tabs, TabPane } from "../components/UI/Tabs";
 import { TicketList } from "../components/tickets/TicketList";
 
+// --- ¡ESTA ES LA LÍNEA QUE FALTA! ---
+// Lee la variable de entorno de Vite
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const BandejaOperativoPage = () => {
   const { disponibles, asignados, loading, error, handleClaimTicket } =
     useBandejaOperativo();

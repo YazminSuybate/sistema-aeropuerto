@@ -40,6 +40,34 @@ export class AuthController {
         }
     }
 
+    // --- ¡ESTE ES EL MÉTODO NUEVO QUE ARREGLA EL ERROR 404! ---
+    // Responde a: GET /api/auth/profile (o /api/profile)
+    async getProfile(req: AuthRequest, res: Response): Promise<Response> {
+        try {
+            // req.user es insertado por tu middleware 'protect'
+            // Tu interfaz 'AuthRequest' dice que el id está en 'req.user.id'
+            const userId = req.user?.id; 
+
+            if (!userId) {
+                return res.status(401).json({ message: 'Token inválido (no contiene ID)' });
+            }
+
+            // Llama al método en el servicio (que también actualizaremos)
+            const usuario = await authService.getProfileById(userId);
+
+            if (!usuario) {
+                return res.status(404).json({ message: 'Usuario del token no encontrado' });
+            }
+
+            return res.status(200).json(usuario);
+
+        } catch (error: any) {
+            console.error("Error en getProfile controller:", error);
+            return res.status(error.statusCode || 500).json({ message: error.message || 'Error interno' });
+        }
+    }
+    // --- FIN DEL MÉTODO NUEVO ---
+
 
     async logout(req: AuthRequest, res: Response): Promise<Response> {
         const userId = req.user?.id;
