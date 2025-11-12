@@ -67,7 +67,7 @@ export default function Login() {
             navigate("/bandeja");
             break;
           case "Atención al Pasajero":
-            navigate("/home");
+            navigate("/atencion"); //esta linea
             break;
           default:
             navigate("/home");

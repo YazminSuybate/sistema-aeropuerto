@@ -16,7 +16,12 @@ if (!REFRESH_SECRET) {
     throw new Error("FATAL ERROR: REFRESH_SECRET no está definido.");
 }
 
-type UserResponse = Omit<usuario, | 'password' | 'refresh_token'>;
+//type UserResponse = Omit<usuario, | 'password' | 'refresh_token'>;
+//nuevo
+type UserResponse = Omit<usuario, | 'password' | 'refresh_token'> & {
+  rol?: any; // Añadido para incluir el objeto rol
+  area?: any; // Añadido para incluir el objeto area
+};
 
 const prisma = new PrismaClient();
 
@@ -28,15 +33,26 @@ export class AuthService {
     }
 
     async login(email: string, password: string): Promise<{ accessToken: string; refreshToken: string; user: UserResponse } | null> {
-        const user = await this.userRepository.findByEmail(email);
+        //const user = await this.userRepository.findByEmail(email);
+        // ¡CAMBIO IMPORTANTE!
+      // Usamos prisma.usuario.findUnique en lugar del repositorio
+      // para poderAÑADIR EL 'INCLUDE' que arregla la redirección.
+        const user = await prisma.usuario.findUnique({
+          where: { email },
+          include: {
+            rol: true, // <-- ¡ESTO ARREGLA LA REDIRECCIÓN DEL LOGIN!
+          }
+        });
 
         if (!user || !user.activo) {
+            // throw new NotFoundError('Usuario no encontrado o inactivo');
             return null;
         }
 
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
+            // throw new UnauthorizedError('Contraseña incorrecta');
             return null;
         }
 
@@ -70,12 +86,39 @@ export class AuthService {
         await this.userRepository.updateRefreshToken(userId, null);
     }
 
+    // --- ¡MÉTODO NUEVO QUE ARREGLA EL 'CARGANDO DATOS...'! ---
+    async getProfileById(userId: number): Promise<UserResponse> {
+    
+      const user = await prisma.usuario.findUnique({
+        where: { id_usuario: userId },
+        // ¡Incluimos ROL y ÁREA para que el frontend los tenga!
+        include: {
+          rol: true,
+          area: true 
+        }
+      });
+  
+      if (!user) {
+        // throw new NotFoundError('Usuario del token no encontrado en BD');
+        throw { statusCode: 404, message: 'Usuario no encontrado' };
+      }
+  
+      // Quitamos el password y el refresh token
+      const { password, refresh_token, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    }
+    // --- FIN DEL MÉTODO NUEVO ---
+
     async refreshAccessToken(currentRefreshToken: string): Promise<{ accessToken: string; refreshToken: string; user: UserResponse } | null> {
         try {
             const decoded = verify(currentRefreshToken, REFRESH_SECRET) as { id: number, email: string, id_rol: number, id_area: number };
             const userId = decoded.id;
 
-            const user = await this.userRepository.findByRefreshToken(currentRefreshToken);
+            //const user = await this.userRepository.findByRefreshToken(currentRefreshToken);
+            // ¡CAMBIO IMPORTANTE!
+          // Usamos el nuevo método 'getProfileById' para obtener el usuario
+          // CON SU ROL Y ÁREA.
+            const user = await this.getProfileById(userId);
 
             if (!user || user.id_usuario !== userId || !user.activo) {
                 return null;
@@ -100,12 +143,13 @@ export class AuthService {
 
             await this.userRepository.updateRefreshToken(user.id_usuario, newRefreshToken);
 
-            const { password: userPassword, refresh_token, ...userData } = user;
+            //const { password: userPassword, refresh_token, ...userData } = user;
 
             return {
                 accessToken: newAccessToken,
                 refreshToken: newRefreshToken,
-                user: userData,
+                //user: userData,
+                user: user,
             };
 
         } catch (error) {

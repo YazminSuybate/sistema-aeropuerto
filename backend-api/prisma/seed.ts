@@ -221,11 +221,34 @@ async function main() {
         id_permiso: permisoId,
     }));
 
+    // --- ¡ESTA ES LA SECCIÓN NUEVA QUE ARREGLA EL 403! ---
+  // Permisos para Atención al Pasajero
+  const atencionPermissionNames = [
+    'TICKET_CREATE',      // Puede crear tickets
+    'TICKET_READ_ALL',    // Puede ver la lista de tickets
+    'TICKET_READ_ID',     // Puede ver el detalle de un ticket
+    'TICKET_UPDATE',      // Necesario para añadir comentarios
+    'CATEGORIA_READ',   // Necesario para el formulario de creación
+    'PASAJERO_READ',    // Necesario para el formulario de creación
+    'ESTADO_READ',      // <-- ¡ESTE ES EL PERMISO QUE FALTABA!
+  ];
+
+  const atencionPermisoIds = atencionPermissionNames
+    .map(nombre => permisoMap.get(nombre)!) // '!' asegura que existe
+    .filter(id => id !== undefined); // Filtra por si acaso
+
+  const atencionPermissions = atencionPermisoIds.map(permisoId => ({
+    id_rol: rolMap.get('Atención al Pasajero')!,
+    id_permiso: permisoId,
+  }));
+  // --- FIN DE LA SECCIÓN NUEVA ---
+
     const allRolePermissions = [
         ...adminPermissions,
         ...gerenciaPermissions,
         ...seniorTicketPermissions,
         ...juniorTicketPermissions,
+        ...atencionPermissions, // <-- AÑADIDO
     ];
 
     await prisma.rol_permiso.createMany({
@@ -306,8 +329,22 @@ async function main() {
         id_area: areaMap.get('Mantenimiento')!,
     };
 
+     // --- NUEVO USUARIO DE ATENCIÓN ---
+    const atencionUser = {
+        nombre: 'Ana',
+        apellido: 'Atencion',
+        email: 'ana.atencion@aeropuerto.com',
+        password: hashedPassword,
+        activo: true,
+        id_rol: rolMap.get('Atención al Pasajero')!,
+        // Asignamos al área 'Ground Staff' que parece la más lógica
+        id_area: areaMap.get('Ground Staff')!, 
+    };
+    // --- FIN DE NUEVO USUARIO ---
+
+
     await prisma.usuario.createMany({
-        data: [adminUser, gerenciaUser, seniorUser, juniorUser],
+        data: [adminUser, gerenciaUser, seniorUser, juniorUser, atencionUser],
         skipDuplicates: true,
     });
     console.log('Usuarios por defecto creados.');
