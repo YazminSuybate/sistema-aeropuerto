@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Home from "./pages/Home";
 import AuthPage from "./pages/AuthPage";
 import AdminHome from "./pages/admin/AdminHome";
@@ -11,12 +16,25 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/home" element={<Home />} />
-<Route path="/bandeja" element={<BandejaOperativoPage />} />
+
         <Route path="/" element={<Navigate to="/auth" replace />} />
         <Route path="/auth" element={<AuthPage />} />
 
-        <Route element={<ProtectedRoute allowedRoles={['Administrador']} />}>
+        <Route element={<ProtectedRoute allowedRoles={["Administrador"]} />}>
           <Route path="/admin" element={<AdminHome />} />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                "Agente Operativo Junior",
+                "Agente Operativo Senior",
+              ]}
+            />
+          }
+        >
+          <Route path="/bandeja" element={<BandejaOperativoPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
