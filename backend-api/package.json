@@ -6,8 +6,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --loader ts-node/esm src/index.ts",
+    "build": "npm run tsc && npx prisma generate",
+    "start": "npx prisma migrate deploy && npx prisma db seed && node build/src/index.js",
     "tsc": "tsc",
-    "start": "node build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

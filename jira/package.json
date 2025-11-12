@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "mock": "json-server --watch public/dashboardData.json --port 4000"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

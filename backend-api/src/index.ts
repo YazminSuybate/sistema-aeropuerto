@@ -9,12 +9,13 @@ import categoriaRoutes from "./routes/categoria.routes.js";
 import estadoRoutes from "./routes/estado.routes.js";
 import pasajeroRoutes from "./routes/pasajero.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
+import { env } from 'prisma/config';
 
 const app: Application = express();
 const PORT = 3000;
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: env("FRONTEND_URL"),
   credentials: true,
 };
 
