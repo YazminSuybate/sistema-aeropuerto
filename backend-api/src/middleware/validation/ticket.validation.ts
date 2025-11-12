@@ -1,6 +1,4 @@
-import { body, param } from 'express-validator';
-// (Asumiendo que tienes una función 'handleValidationErrors' que usa 'validationResult')
-// import { handleValidationErrors } from './utils.js'; 
+import { body } from 'express-validator';
 
 export const createTicketValidation = [
     body('titulo')
@@ -14,7 +12,6 @@ export const createTicketValidation = [
     body('id_pasajero')
         .optional()
         .isInt({ min: 1 }).withMessage('El ID de pasajero debe ser un número.'),
-    // handleValidationErrors // Middleware que revisa los errores
 ];
 
 export const updateTicketValidation = [
@@ -26,5 +23,4 @@ export const updateTicketValidation = [
         .optional()
         .notEmpty().withMessage('La descripción no puede estar vacía.')
         .isLength({ min: 10 }).withMessage('La descripción debe tener al menos 10 caracteres.'),
-    // handleValidationErrors // Middleware que revisa los errores
 ];

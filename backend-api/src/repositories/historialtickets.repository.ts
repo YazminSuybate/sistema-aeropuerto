@@ -3,12 +3,10 @@ import type { HistorialTicket, HistorialTicketCreateDTO, HistorialTicketUpdateDT
 
 const prisma = new PrismaClient();
 
-// Asumiendo que el modelo en schema.prisma se llama 'historialTicket'
-// (mapeado de 'historial_ticket' en la BD)
 export class HistorialTicketRepository {
 
     async findAll(): Promise<HistorialTicket[]> {
-        return prisma.historialTicket.findMany({
+        return prisma.historial_ticket.findMany({
             include: {
                 ticket: true,
                 usuario: true,
@@ -17,7 +15,7 @@ export class HistorialTicketRepository {
     }
 
     async findById(id_historial: number): Promise<HistorialTicket | null> {
-        return prisma.historialTicket.findUnique({
+        return prisma.historial_ticket.findUnique({
             where: { id_historial },
             include: {
                 ticket: true,
@@ -27,21 +25,20 @@ export class HistorialTicketRepository {
     }
 
     async create(data: HistorialTicketCreateDTO): Promise<HistorialTicket> {
-        // Asumimos que la BD (o Prisma) maneja 'fecha_cambio'
-        return prisma.historialTicket.create({
+        return prisma.historial_ticket.create({
             data,
         });
     }
 
     async update(id_historial: number, data: HistorialTicketUpdateDTO): Promise<HistorialTicket> {
-        return prisma.historialTicket.update({
+        return prisma.historial_ticket.update({
             where: { id_historial },
             data,
         });
     }
 
     async delete(id_historial: number): Promise<HistorialTicket> {
-        return prisma.historialTicket.delete({
+        return prisma.historial_ticket.delete({
             where: { id_historial },
         });
     }

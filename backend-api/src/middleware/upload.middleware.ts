@@ -18,10 +18,10 @@ if (!fs.existsSync(uploadDir)) {
 
 // Configuración de almacenamiento
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (_req, _file, cb) => {
         cb(null, uploadDir); // Directorio de destino
     },
-    filename: (req, file, cb) => {
+    filename: (_req, file, cb) => {
         // Generar un nombre de archivo único
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const extension = path.extname(file.originalname);
@@ -30,7 +30,7 @@ const storage = multer.diskStorage({
 });
 
 // Filtro de archivos
-const fileFilter = (req: any, file: any, cb: any) => {
+const fileFilter = (_req: any, file: any, cb: any) => {
     // Aceptar solo ciertos tipos de archivos
     if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
         cb(null, true);

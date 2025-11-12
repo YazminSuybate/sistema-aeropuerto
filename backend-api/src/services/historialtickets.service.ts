@@ -10,8 +10,8 @@ export class HistorialTicketsService {
     private usuarioRepository: UsuarioRepository;
 
     constructor(
-        historialRepository: HistorialTicketRepository, 
-        ticketRepository: TicketRepository, 
+        historialRepository: HistorialTicketRepository,
+        ticketRepository: TicketRepository,
         usuarioRepository: UsuarioRepository
     ) {
         this.historialRepository = historialRepository;
@@ -31,7 +31,6 @@ export class HistorialTicketsService {
         return historialEntry;
     }
 
-    // (Estos métodos de validación son idénticos a los de ComentarioService)
     private async validateTicket(id_ticket: number) {
         const ticket = await this.ticketRepository.findById(id_ticket);
         if (!ticket) {
@@ -57,8 +56,6 @@ export class HistorialTicketsService {
         if (!data.id_usuario) {
             throw new BadRequestError("El ID de usuario es obligatorio.");
         }
-        // Nota: valor_anterior y valor_nuevo pueden ser null o vacíos,
-        // así que no los validamos como 'notEmpty'.
 
         // 2. Validar llaves foráneas
         await this.validateTicket(data.id_ticket);
@@ -76,7 +73,7 @@ export class HistorialTicketsService {
         if (data.tipo_cambio?.trim() === '') {
             throw new BadRequestError("El tipo de cambio no puede estar vacío.");
         }
-        
+
         // 3. Validar FKs (si se permite cambiarlos en la actualización)
         if (data.id_ticket) {
             await this.validateTicket(data.id_ticket);
@@ -90,7 +87,7 @@ export class HistorialTicketsService {
     }
 
     async deleteHistorialTicket(id_historial: number): Promise<HistorialTicket> {
-        await this.getHistorialTicketById(id_historial); // Asegurarse que existe
+        await this.getHistorialTicketById(id_historial);
         return this.historialRepository.delete(id_historial);
     }
 }
