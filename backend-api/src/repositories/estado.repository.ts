@@ -32,4 +32,11 @@ export class EstadoRepository {
             where: { id_estado },
         });
     }
+    // --- MÉTODO NUEVO (AQUÍ ESTÁ LA SOLUCIÓN) ---
+    async findByName(nombre_estado: string): Promise<Estado | null> {
+        return prisma.estado.findFirst({
+            where: { nombre_estado },
+        });
+    }
+    // --- FIN DEL MÉTODO NUEVO ---
 }

@@ -2,7 +2,10 @@ import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import type { Secret } from 'jsonwebtoken';
 import { env } from 'prisma/config';
-import { TokenExpiredError } from 'jsonwebtoken';
+
+
+// ESTA ES LA LÍNEA QUE ARREGLA EL PROBLEMA
+const { TokenExpiredError } = jwt;
 
 export interface AuthRequest extends Request {
     user?: {

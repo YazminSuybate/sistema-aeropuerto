@@ -47,12 +47,16 @@ const permissionsData = [
     { nombre: 'PASAJERO_UPDATE', descripcion: 'Permite actualizar pasajeros existentes.' },
     { nombre: 'PASAJERO_DELETE', descripcion: 'Permite eliminar pasajeros.' },
 
-    // // Permisos relacionados con Tickets (esquema simplificado, se expandirá en el futuro)
-    // { nombre: 'TICKET_READ_ALL', descripcion: 'Permite leer todos los tickets.' },
-    // { nombre: 'TICKET_CREATE', descripcion: 'Permite crear tickets.' },
-    // { nombre: 'TICKET_ASSIGN', descripcion: 'Permite asignarse un ticket del área.' },
-    // { nombre: 'TICKET_UPDATE_OWN', descripcion: 'Permite actualizar tickets que le son asignados.' },
-    // { nombre: 'TICKET_LIBERAR', descripcion: 'Permite liberar un ticket al pool de su área (Junior/Senior).' },
+    // Permisos relacionados con Tickets
+    { nombre: 'TICKET_READ_ALL', descripcion: 'Permite ver la lista de todos los tickets' },
+    { nombre: 'TICKET_READ_ID', descripcion: 'Permite ver el detalle de un ticket específico' },
+    { nombre: 'TICKET_CREATE', descripcion: 'Permite crear nuevos tickets' },
+    { nombre: 'TICKET_UPDATE', descripcion: 'Permite actualizar los detalles de un ticket' },
+    { nombre: 'TICKET_DELETE', descripcion: 'Permite eliminar (o cancelar) un ticket' },
+    { nombre: 'TICKET_READ_BY_AREA', descripcion: 'Permite ver la lista de tickets de un área' },
+    { nombre: 'TICKET_READ_BY_RESPONSIBLE', descripcion: 'Permite ver la lista de tickets de un responsable' },
+    { nombre: 'TICKET_ASSIGN', descripcion: 'Permite asignar un ticket a un operador' },
+    { nombre: 'TICKET_CLAIM', descripcion: 'Permite a un operador tomar un ticket disponible' },
 ];
 
 // Roles definidos 
@@ -117,24 +121,49 @@ async function createCategorias(areaMap: Map<string, number>) {
 async function main() {
     console.log('Iniciando el proceso de seeding...');
 
-    // --- 1. Limpiar la base de datos ---
-    await prisma.rol_permiso.deleteMany();
-    await prisma.categoria.deleteMany(); // NEW
-    await prisma.estado.deleteMany(); // NEW
-    await prisma.pasajero.deleteMany(); // NEW
+    // --- 1. Limpiar la base de datos (USANDO TRUNCATE) ---
+    // TRUNCATE resetea los contadores de ID a 1
 
-    await prisma.usuario.deleteMany();
-    await prisma.permiso.deleteMany();
-    await prisma.rol.deleteMany();
-    await prisma.area.deleteMany();
+    // Desactivar temporalmente la revisión de llaves foráneas
+    await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0;');
+    console.log('Llaves foráneas desactivadas temporalmente.');
 
-    console.log('Datos existentes eliminados.');
+    // Lista de todas las tablas a truncar (en cualquier orden, ya que las llaves están off)
+    // Asegúrate de que los nombres coincidan con tu BD (schema.prisma usa @@map("...") a veces)
+    const tableNames = [
+        'rol_permiso',
+        'ticket',
+        'categoria',
+        'estado',
+        'pasajero',
+        'usuario',
+        'permiso',
+        'rol',
+        'area',
+        'comentario', // Añade las tablas que faltaban
+        'evidencia',
+        'historial_ticket',
+        'liberacion_ticket',
+        'solicitud_cambio_area'
+    ];
+
+    for (const table of tableNames) {
+        await prisma.$executeRawUnsafe(`TRUNCATE TABLE \`${table}\`;`);
+        console.log(`Tabla '${table}' truncada y reseteada.`);
+    }
+
+    // Reactivar la revisión de llaves foráneas
+    await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1;');
+    console.log('Llaves foráneas reactivadas.');
+    console.log('Datos existentes eliminados y contadores reseteados.');
 
     // --- 2. Crear Permisos ---
     const createdPermisos = await Promise.all(
         permissionsData.map(p => prisma.permiso.create({ data: p }))
     );
     console.log(`Creados ${createdPermisos.length} permisos.`);
+
+    const permisoMap = new Map(createdPermisos.map(p => [p.nombre, p.id_permiso]));
 
     // --- 3. Crear Áreas ---
     const createdAreas = await Promise.all(
@@ -167,11 +196,36 @@ async function main() {
             id_permiso: p.id_permiso,
         }));
 
+    // Define los nombres de los permisos que quieres asignar
+    const operativoPermissionNames = [
+        'TICKET_READ_BY_AREA',
+        'TICKET_READ_BY_RESPONSIBLE',
+        'TICKET_ASSIGN',
+        'TICKET_CLAIM'
+    ];
+
+    // Obtén los IDs de esos permisos del Map que creamos
+    const operativoPermisoIds = operativoPermissionNames
+        .map(nombre => permisoMap.get(nombre)!) // '!' asegura que existe
+        .filter(id => id !== undefined); // Filtra por si acaso
+
+    // Mapea los permisos para el ROL SENIOR
+    const seniorTicketPermissions = operativoPermisoIds.map(permisoId => ({
+        id_rol: rolMap.get('Agente Operativo Senior')!,
+        id_permiso: permisoId,
+    }));
+
+    // Mapea los mismos permisos para el ROL JUNIOR (como solicitaste)
+    const juniorTicketPermissions = operativoPermisoIds.map(permisoId => ({
+        id_rol: rolMap.get('Agente Operativo Junior')!,
+        id_permiso: permisoId,
+    }));
 
     const allRolePermissions = [
         ...adminPermissions,
         ...gerenciaPermissions,
-        // Permisos de tickets se pueden agregar después si se necesita
+        ...seniorTicketPermissions,
+        ...juniorTicketPermissions,
     ];
 
     await prisma.rol_permiso.createMany({
@@ -186,14 +240,20 @@ async function main() {
         skipDuplicates: true,
     });
     console.log(`Creados ${createdEstados.count} estados de ticket.`);
+    // --- NUEVO: Crear Map para estados ---
+    const estadoAbierto = await prisma.estado.findFirst({ where: { nombre_estado: 'Abierto' } });
+    const estadoAbiertoId = estadoAbierto!.id_estado;
 
     // --- 7. Crear Categorías de Ticket por defecto (NEW) ---
     const categoriasToCreate = await createCategorias(areaMap);
-    const createdCategorias = await prisma.categoria.createMany({
+    await prisma.categoria.createMany({
         data: categoriasToCreate,
         skipDuplicates: true,
     });
-    console.log(`Creadas ${createdCategorias.count} categorías de ticket.`);
+    console.log(`Creadas ${categoriasToCreate.length} categorías de ticket.`);
+    // --- NUEVO: Crear Map para categorías ---
+    const createdCategorias = await prisma.categoria.findMany();
+    const categoriaMap = new Map(createdCategorias.map(c => [c.nombre_categoria, c.id_categoria]));
 
     // --- 8. Crear Pasajeros de prueba (NEW) ---
     await prisma.pasajero.createMany({
@@ -209,48 +269,105 @@ async function main() {
 
     const hashedPassword = await bcrypt.hash('admin123', SALT_ROUNDS);
 
+    const adminUser = {
+        nombre: 'Admin',
+        apellido: 'Sistema',
+        email: 'admin@aeropuerto.com',
+        password: hashedPassword,
+        activo: true,
+        id_rol: rolMap.get('Administrador')!,
+        id_area: null,
+    };
+    const gerenciaUser = {
+        nombre: 'Maria',
+        apellido: 'Gerencia',
+        email: 'maria.gerencia@aeropuerto.com',
+        password: hashedPassword,
+        activo: true,
+        id_rol: rolMap.get('Gerencia')!,
+        id_area: null,
+    };
+    const seniorUser = {
+        nombre: 'Carlos',
+        apellido: 'Operativo',
+        email: 'carlos.operativo@aeropuerto.com',
+        password: hashedPassword,
+        activo: true,
+        id_rol: rolMap.get('Agente Operativo Senior')!,
+        id_area: areaMap.get('Mantenimiento')!,
+    };
+    const juniorUser = {
+        nombre: 'Lucia',
+        apellido: 'Operativa',
+        email: 'lucia.operativa@aeropuerto.com',
+        password: hashedPassword,
+        activo: true,
+        id_rol: rolMap.get('Agente Operativo Junior')!,
+        id_area: areaMap.get('Mantenimiento')!,
+    };
+
     await prisma.usuario.createMany({
+        data: [adminUser, gerenciaUser, seniorUser, juniorUser],
+        skipDuplicates: true,
+    });
+    console.log('Usuarios por defecto creados.');
+    // --- NUEVO: Obtener IDs de usuarios creados ---
+    const userAdmin = await prisma.usuario.findFirst({ where: { email: adminUser.email } });
+
+    // --- 10. (NUEVO) Crear Tickets de Ejemplo (PUNTO 3) ---
+    console.log('Creando tickets de ejemplo...');
+    await prisma.ticket.createMany({
         data: [
             {
-                nombre: 'Admin',
-                apellido: 'Sistema',
-                email: 'admin@aeropuerto.com',
-                password: hashedPassword,
-                activo: true,
-                id_rol: rolMap.get('Administrador')!,
-                id_area: null,
+                titulo: 'Wi-Fi no funciona en Sala VIP (Puerta A-20)',
+                descripcion: 'Varios pasajeros reportan que la red "Aeropuerto_Gratis" no da acceso a internet.',
+                fecha_limite_sla: new Date('2025-11-11T12:00:00'),
+                id_usuario_creador: userAdmin!.id_usuario,
+                id_area_asignada: areaMap.get('Mantenimiento')!,
+                id_estado: estadoAbiertoId,
+                id_categoria: categoriaMap.get('Fallo de Sistema Crítico')!,
             },
             {
-                nombre: 'Maria',
-                apellido: 'Gerencia',
-                email: 'maria.gerencia@aeropuerto.com',
-                password: hashedPassword,
-                activo: true,
-                id_rol: rolMap.get('Gerencia')!,
-                id_area: null,
+                titulo: 'Escalera mecánica detenida (Sector C)',
+                descripcion: 'La escalera que sube al área de embarque C está detenida.',
+                fecha_limite_sla: new Date('2025-11-11T10:15:00'),
+                id_usuario_creador: userAdmin!.id_usuario,
+                id_area_asignada: areaMap.get('Mantenimiento')!,
+                id_estado: estadoAbiertoId,
+                id_categoria: categoriaMap.get('Mantenimiento de Aeronave (Rutina)')!,
             },
             {
-                nombre: 'Carlos',
-                apellido: 'Operativo',
-                email: 'carlos.operativo@aeropuerto.com',
-                password: hashedPassword,
-                activo: true,
-                id_rol: rolMap.get('Agente Operativo Senior')!,
-                id_area: areaMap.get('Mantenimiento')!,
+                titulo: 'Fuga de agua en baños (T1 - Llegadas)',
+                descripcion: 'Un charco grande se está formando en los baños de hombres.',
+                fecha_limite_sla: new Date('2025-11-11T09:30:00'),
+                id_usuario_creador: userAdmin!.id_usuario,
+                id_area_asignada: areaMap.get('Mantenimiento')!,
+                id_estado: estadoAbiertoId,
+                id_categoria: categoriaMap.get('Mantenimiento de Aeronave (Rutina)')!,
             },
             {
-                nombre: 'Lucia',
-                apellido: 'Operativa',
-                email: 'lucia.operativa@aeropuerto.com',
-                password: hashedPassword,
-                activo: true,
-                id_rol: rolMap.get('Agente Operativo Junior')!,
-                id_area: areaMap.get('Mantenimiento')!,
+                titulo: 'Check-in (Mostrador B-12) sin personal',
+                descripcion: 'Larga fila de pasajeros para el vuelo AA-451.',
+                fecha_limite_sla: new Date('2025-11-11T09:30:00'),
+                id_usuario_creador: userAdmin!.id_usuario,
+                id_area_asignada: areaMap.get('Mantenimiento')!,
+                id_estado: estadoAbiertoId,
+                id_categoria: categoriaMap.get('Problema de Equipaje')!,
+            },
+            {
+                titulo: 'Cinta de equipaje 3 detenida',
+                descripcion: 'La cinta de equipaje 3 (vuelos internacionales) se detuvo.',
+                fecha_limite_sla: new Date('2025-11-11T10:20:00'),
+                id_usuario_creador: userAdmin!.id_usuario,
+                id_area_asignada: areaMap.get('Mantenimiento')!,
+                id_estado: estadoAbiertoId,
+                id_categoria: categoriaMap.get('Problema de Equipaje')!,
             },
         ],
         skipDuplicates: true,
     });
-    console.log('Usuarios por defecto creados (Admin/Gerencia/Operativo).');
+    console.log('Tickets de ejemplo creados.');
+
 }
 
 main()
