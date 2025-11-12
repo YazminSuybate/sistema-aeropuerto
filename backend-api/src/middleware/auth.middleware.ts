@@ -3,6 +3,10 @@ import jwt from 'jsonwebtoken';
 import type { Secret } from 'jsonwebtoken';
 import { env } from 'prisma/config';
 
+
+// ESTA ES LA LÍNEA QUE ARREGLA EL PROBLEMA
+const { TokenExpiredError } = jwt;
+
 export interface AuthRequest extends Request {
     user?: {
         id: number;
@@ -56,7 +60,7 @@ export const protect = (
             console.error('Error al verificar token: TokenExpiredError: jwt expired');
             return res.status(401).json({
                 message: 'Su sesión ha expirado. Por favor, vuelva a iniciar sesión.',
-                code: 'TOKEN_EXPIRED', 
+                code: 'TOKEN_EXPIRED',
                 expiredAt: error.expiredAt
             });
         }
