@@ -38,4 +38,13 @@ export class RolRepository {
             where: { id_rol },
         });
     }
+
+    async getPermissionsByRoleId(id_rol: number): Promise<string[]> {
+        const results = await prisma.rol_permiso.findMany({
+            where: { id_rol },
+            select: { permiso: { select: { nombre: true } } }
+        });
+
+        return results.map(rp => rp.permiso.nombre);
+    }
 }

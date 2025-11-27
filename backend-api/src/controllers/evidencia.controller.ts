@@ -4,53 +4,33 @@ import { EvidenciaService } from '../services/evidencia.service.js';
 import { EvidenciaRepository } from '../repositories/evidencia.repository.js';
 import { TicketRepository } from '../repositories/ticket.repository.js';
 import { BadRequestError, NotFoundError } from '../errors/custom.error.js';
-import fs from 'fs'; // <--- ¡ESTA ES LA LÍNEA QUE FALTABA!
+import { handleControllerError, validateAndGetId } from '../utils/controller.utils.js';
+import fs from 'fs';
 
-// Instanciar repositorios y servicio
 const evidenciaRepository = new EvidenciaRepository();
-const ticketRepository = new TicketRepository(); 
+const ticketRepository = new TicketRepository();
 const evidenciaService = new EvidenciaService(evidenciaRepository, ticketRepository);
 
-// Helper para validar IDs
-function validateAndGetId(req: AuthRequest, res: Response, paramName: string = 'id'): number | null {
-    const id_param = req.params[paramName];
-    if (!id_param) {
-        res.status(400).json({ message: `Parámetro ID '${paramName}' faltante.` });
-        return null;
-    }
-    const id = parseInt(id_param, 10);
-    if (isNaN(id)) {
-        res.status(400).json({ message: `ID '${paramName}' inválido.` });
-        return null;
-    }
-    return id;
-}
-
 export class EvidenciaController {
-    
+
     // POST /api/evidencias/upload
     async createEvidencia(req: AuthRequest, res: Response) {
         try {
-            // 1. El archivo viene en req.file gracias a multer
             if (!req.file) {
                 return res.status(400).json({ message: 'No se subió ningún archivo.' });
             }
-            
-            // 2. El ID del ticket viene en el cuerpo del formulario (multipart/form-data)
+
             const { id_ticket } = req.body;
             if (!id_ticket) {
-                // Si falta el ID, borramos el archivo que se subió
                 fs.unlinkSync(req.file.path);
                 return res.status(400).json({ message: 'El ID del ticket es obligatorio.' });
             }
 
-            // 3. (IMPORTANTE) Guardamos la RUTA RELATIVA, no absoluta
-            // req.file.path te da algo como: uploads/evidencias/evidencia-123.jpg
-            const relativePath = req.file.path.replace(/\\/g, '/'); // Normalizar a Slashes
+            const relativePath = req.file.path.replace(/\\/g, '/');
 
             const data = {
                 id_ticket: parseInt(id_ticket, 10),
-                url_archivo: relativePath, // La ruta relativa
+                url_archivo: relativePath,
                 tipo_mime: req.file.mimetype
             };
 
@@ -60,11 +40,12 @@ export class EvidenciaController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
+
             if (error instanceof BadRequestError) {
                 return res.status(400).json({ message: error.message });
             }
-            console.error('Error en createEvidencia:', error);
-            return res.status(500).json({ message: error.message || 'Error al subir la evidencia.' });
+
+            return handleControllerError(error, res, 'Error al crear la evidencia.');
         }
     }
 
@@ -77,8 +58,7 @@ export class EvidenciaController {
             const evidencias = await evidenciaService.getEvidenciasByTicketId(id_ticket);
             return res.status(200).json(evidencias);
         } catch (error: any) {
-            console.error('Error en getEvidenciasByTicketId:', error);
-            return res.status(500).json({ message: 'Error al obtener evidencias.' });
+            return handleControllerError(error, res, 'Error al obtener las evidencias del ticket.');
         }
     }
 
@@ -94,8 +74,7 @@ export class EvidenciaController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
-            console.error('Error en deleteEvidencia:', error);
-            return res.status(500).json({ message: 'Error al eliminar la evidencia.' });
+            return handleControllerError(error, res, 'Error al eliminar la evidencia.');
         }
     }
 }

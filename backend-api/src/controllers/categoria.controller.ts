@@ -2,49 +2,11 @@ import type { Request, Response } from 'express';
 import { CategoriaService } from '../services/categoria.service.js';
 import { CategoriaRepository } from '../repositories/categoria.repository.js';
 import { AreaRepository } from '../repositories/area.repository.js';
-import type { CustomError } from '../errors/custom.error.js';
+import { handleControllerError, validateAndGetId } from '../utils/controller.utils.js';
 
 const categoriaRepository = new CategoriaRepository();
 const areaRepository = new AreaRepository();
 const categoriaService = new CategoriaService(categoriaRepository, areaRepository);
-
-function handleControllerError(error: any, res: Response, defaultMessage: string): Response | void {
-    console.error(`Error en el controlador de Categoría:`, error);
-
-    if (error && error.statusCode) {
-        return res.status((error as CustomError).statusCode).json({ message: error.message });
-    }
-
-    if (error.code) {
-        switch (error.code) {
-            case 'P2002':
-                return res.status(409).json({ message: error.message || 'El recurso ya existe.', code: 'P2002' });
-            case 'P2003':
-                return res.status(400).json({ message: error.message || 'Error de llave foránea. Recurso asociado inválido.', code: 'P2003' });
-        }
-    }
-
-    return res.status(500).json({ message: defaultMessage });
-};
-
-function validateAndGetId(req: Request, res: Response): number | null {
-    const idParam = req.params.id;
-
-    if (!idParam) {
-        res.status(400).json({ message: 'El ID de categoría es obligatorio en la ruta.' });
-        return null;
-    }
-
-    const id_categoria = parseInt(idParam, 10);
-
-    if (isNaN(id_categoria)) {
-        res.status(400).json({ message: 'ID de categoría inválido' });
-        return null;
-    }
-
-    return id_categoria;
-}
-
 
 export class CategoriaController {
     // GET api/categorias
@@ -59,7 +21,7 @@ export class CategoriaController {
 
     // GET api/categorias/:id
     async getById(req: Request, res: Response): Promise<void> {
-        const id_categoria = validateAndGetId(req, res);
+        const id_categoria = validateAndGetId(req, res, 'id');
         if (id_categoria === null) return;
 
         try {
@@ -86,7 +48,7 @@ export class CategoriaController {
 
     // PUT api/categorias/:id
     async update(req: Request, res: Response): Promise<void> {
-        const id_categoria = validateAndGetId(req, res);
+        const id_categoria = validateAndGetId(req, res, 'id');
         if (id_categoria === null) return;
 
         const data = req.body;
@@ -101,7 +63,7 @@ export class CategoriaController {
 
     // DELETE api/categorias/:id
     async remove(req: Request, res: Response): Promise<Response<any, Record<string, any>> | void> {
-        const id_categoria = validateAndGetId(req, res);
+        const id_categoria = validateAndGetId(req, res, 'id');
         if (id_categoria === null) return;
 
         try {

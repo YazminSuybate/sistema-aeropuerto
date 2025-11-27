@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service.js';
 
+import { handleControllerError } from '../utils/controller.utils.js';
+
 const authService = new AuthService();
 
 export interface AuthRequest extends Request {
@@ -35,39 +37,30 @@ export class AuthController {
                 user: result.user,
             });
         } catch (error) {
-            console.error('Error en el login:', error);
-            return res.status(500).json({ message: 'Error interno del servidor.' });
+            return handleControllerError(error, res, 'Error interno del servidor durante el login.');
         }
     }
 
-    // --- ¡ESTE ES EL MÉTODO NUEVO QUE ARREGLA EL ERROR 404! ---
-    // Responde a: GET /api/auth/profile (o /api/profile)
-    async getProfile(req: AuthRequest, res: Response): Promise<Response> {
-        try {
-            // req.user es insertado por tu middleware 'protect'
-            // Tu interfaz 'AuthRequest' dice que el id está en 'req.user.id'
-            const userId = req.user?.id; 
+    async getProfile(req: AuthRequest, res: Response): Promise<Response> {
+        try {
+            const userId = req.user?.id;
 
-            if (!userId) {
-                return res.status(401).json({ message: 'Token inválido (no contiene ID)' });
-            }
+            if (!userId) {
+                return res.status(401).json({ message: 'Token inválido (no contiene ID)' });
+            }
 
-            // Llama al método en el servicio (que también actualizaremos)
-            const usuario = await authService.getProfileById(userId);
+            const usuario = await authService.getProfileById(userId);
 
-            if (!usuario) {
-                return res.status(404).json({ message: 'Usuario del token no encontrado' });
-            }
+            if (!usuario) {
+                return res.status(404).json({ message: 'Usuario del token no encontrado' });
+            }
 
-            return res.status(200).json(usuario);
+            return res.status(200).json(usuario);
 
-        } catch (error: any) {
-            console.error("Error en getProfile controller:", error);
-            return res.status(error.statusCode || 500).json({ message: error.message || 'Error interno' });
-        }
-    }
-    // --- FIN DEL MÉTODO NUEVO ---
-
+        } catch (error: any) {
+            return handleControllerError(error, res, 'Error interno del servidor.');
+        }
+    }
 
     async logout(req: AuthRequest, res: Response): Promise<Response> {
         const userId = req.user?.id;
@@ -87,8 +80,7 @@ export class AuthController {
 
             return res.status(200).json({ message: 'Sesión cerrada exitosamente.' });
         } catch (error) {
-            console.error('Error en el logout:', error);
-            return res.status(500).json({ message: 'Error interno del servidor.' });
+            return handleControllerError(error, res, 'Error interno del servidor.');
         }
     }
 

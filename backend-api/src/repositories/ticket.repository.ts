@@ -4,8 +4,23 @@ import type { Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const BASE_INCLUDE_FIELDS = {
+  estado: true,
+  area_asignada: {
+    select: { nombre_area: true },
+  },
+  categoria_info: {
+    select: { nombre_categoria: true, prioridad: true, sla_horas: true },
+  },
+  responsable: {
+    select: { nombre: true, apellido: true },
+  },
+  pasajero_info: {
+    select: { documento_id: true, nombre: true }
+  }
+};
+
 export class TicketRepository {
-  // Busca todos, incluyendo relaciones clave para una vista de lista
   async findAll(): Promise<Ticket[]> {
     return prisma.ticket.findMany({
       include: {
@@ -26,14 +41,12 @@ export class TicketRepository {
     });
   }
 
-  // Busca todos los tickets asignados a un área específica
   async findByAreaId(id_area: number): Promise<Ticket[]> {
     return prisma.ticket.findMany({
       where: {
         id_area_asignada: id_area,
       },
       include: {
-        // Usamos el mismo include de 'findAll' para consistencia
         estado: true,
         area_asignada: {
           select: { nombre_area: true },
@@ -51,14 +64,12 @@ export class TicketRepository {
     });
   }
 
-  // Busca todos los tickets ASIGNADOS a un usuario (responsable)
   async findByResponsibleId(id_usuario: number): Promise<Ticket[]> {
     return prisma.ticket.findMany({
       where: {
         id_usuario_responsable: id_usuario,
       },
       include: {
-        // Usamos el mismo include de 'findAll'
         estado: true,
         area_asignada: {
           select: { nombre_area: true },
@@ -76,7 +87,6 @@ export class TicketRepository {
     });
   }
 
-  // Busca uno con TODA la información relacionada
   async findById(id_ticket: number): Promise<Ticket | null> {
     return prisma.ticket.findUnique({
       where: { id_ticket },
@@ -128,14 +138,18 @@ export class TicketRepository {
     });
   }
 
-  // El tipo de 'data' es inferido por el servicio, que ya hizo la lógica
   async create(data: Prisma.ticketCreateInput): Promise<Ticket> {
     return prisma.ticket.create({
       data,
+      include: {
+        ...BASE_INCLUDE_FIELDS,
+        comentarios: {
+          include: { usuario: { select: { id_usuario: true, nombre: true, apellido: true } } }
+        }
+      }
     });
   }
 
-  // Solo permite actualizar ciertos campos (el servicio lo valida)
   async update(
     id_ticket: number,
     data: Partial<Omit<Ticket, "id_ticket">>

@@ -1,48 +1,10 @@
 import type { Request, Response } from 'express';
 import { EstadoService } from '../services/estado.service.js';
 import { EstadoRepository } from '../repositories/estado.repository.js';
-import type { CustomError } from '../errors/custom.error.js';
+import { handleControllerError, validateAndGetId } from '../utils/controller.utils.js';
 
 const estadoRepository = new EstadoRepository();
 const estadoService = new EstadoService(estadoRepository);
-
-function handleControllerError(error: any, res: Response, defaultMessage: string): Response | void {
-    console.error(`Error en el controlador de Estado:`, error);
-
-    if (error && error.statusCode) {
-        return res.status((error as CustomError).statusCode).json({ message: error.message });
-    }
-
-    if (error.code) {
-        switch (error.code) {
-            case 'P2002':
-                return res.status(409).json({ message: error.message || 'El recurso ya existe.', code: 'P2002' });
-            case 'P2003':
-                return res.status(409).json({ message: error.message || 'Error de llave foránea. Recurso asociado inválido.', code: 'P2003' });
-        }
-    }
-
-    return res.status(500).json({ message: defaultMessage });
-};
-
-function validateAndGetId(req: Request, res: Response): number | null {
-    const idParam = req.params.id;
-
-    if (!idParam) {
-        res.status(400).json({ message: 'El ID de estado es obligatorio en la ruta.' });
-        return null;
-    }
-
-    const id_estado = parseInt(idParam, 10);
-
-    if (isNaN(id_estado)) {
-        res.status(400).json({ message: 'ID de estado inválido' });
-        return null;
-    }
-
-    return id_estado;
-}
-
 
 export class EstadoController {
     // GET api/estados
@@ -57,7 +19,7 @@ export class EstadoController {
 
     // GET api/estados/:id
     async getById(req: Request, res: Response): Promise<void> {
-        const id_estado = validateAndGetId(req, res);
+        const id_estado = validateAndGetId(req, res, 'id');
         if (id_estado === null) return;
 
         try {
@@ -84,7 +46,7 @@ export class EstadoController {
 
     // PUT api/estados/:id
     async update(req: Request, res: Response): Promise<void> {
-        const id_estado = validateAndGetId(req, res);
+        const id_estado = validateAndGetId(req, res, 'id');
         if (id_estado === null) return;
 
         const data = req.body;
@@ -99,7 +61,7 @@ export class EstadoController {
 
     // DELETE api/estados/:id
     async remove(req: Request, res: Response): Promise<Response<any, Record<string, any>> | void> {
-        const id_estado = validateAndGetId(req, res);
+        const id_estado = validateAndGetId(req, res, 'id');
         if (id_estado === null) return;
 
         try {

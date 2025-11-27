@@ -1,49 +1,10 @@
 import type { Request, Response } from 'express';
 import { PasajeroService } from '../services/pasajero.service.js';
 import { PasajeroRepository } from '../repositories/pasajero.repository.js';
-import type { CustomError } from '../errors/custom.error.js';
+import { handleControllerError, validateAndGetId } from '../utils/controller.utils.js';
 
 const pasajeroRepository = new PasajeroRepository();
 const pasajeroService = new PasajeroService(pasajeroRepository);
-
-function handleControllerError(error: any, res: Response, defaultMessage: string): Response | void {
-    console.error(`Error en el controlador de Pasajero:`, error);
-
-    if (error && error.statusCode) {
-        return res.status((error as CustomError).statusCode).json({ message: error.message });
-    }
-
-    if (error.code) {
-        switch (error.code) {
-            case 'P2002':
-                return res.status(409).json({ message: error.message || 'El recurso ya existe.', code: 'P2002' });
-            case 'P2003':
-                return res.status(409).json({ message: error.message || 'Error de llave foránea. Recurso asociado inválido.', code: 'P2003' });
-        }
-    }
-
-    return res.status(500).json({ message: defaultMessage });
-};
-
-
-function validateAndGetId(req: Request, res: Response): number | null {
-    const idParam = req.params.id;
-
-    if (!idParam) {
-        res.status(400).json({ message: 'El ID de pasajero es obligatorio en la ruta.' });
-        return null;
-    }
-
-    const id_pasajero = parseInt(idParam, 10);
-
-    if (isNaN(id_pasajero)) {
-        res.status(400).json({ message: 'ID de pasajero inválido' });
-        return null;
-    }
-
-    return id_pasajero;
-}
-
 
 export class PasajeroController {
     // GET api/pasajeros
@@ -58,7 +19,7 @@ export class PasajeroController {
 
     // GET api/pasajeros/:id
     async getById(req: Request, res: Response): Promise<void> {
-        const id_pasajero = validateAndGetId(req, res);
+        const id_pasajero = validateAndGetId(req, res, 'id');
         if (id_pasajero === null) return;
 
         try {
@@ -85,7 +46,7 @@ export class PasajeroController {
 
     // PUT api/pasajeros/:id
     async update(req: Request, res: Response): Promise<void> {
-        const id_pasajero = validateAndGetId(req, res);
+        const id_pasajero = validateAndGetId(req, res, 'id');
         if (id_pasajero === null) return;
 
         const data = req.body;
@@ -100,7 +61,7 @@ export class PasajeroController {
 
     // DELETE api/pasajeros/:id
     async remove(req: Request, res: Response): Promise<Response<any, Record<string, any>> | void> {
-        const id_pasajero = validateAndGetId(req, res);
+        const id_pasajero = validateAndGetId(req, res, 'id');
         if (id_pasajero === null) return;
 
         try {
