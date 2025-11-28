@@ -64,19 +64,19 @@ export const claimTicket = (ticketId) => {
 };
 
 export const getProfile = () => {
-  return apiFetch("/auth/profile"); 
+  return apiFetch("/auth/profile");
 };
 
 export const getTickets = () => {
-  return apiFetch("/tickets"); 
+  return apiFetch("/tickets");
 };
 
 export const getCategorias = () => {
-  return apiFetch("/categorias"); 
+  return apiFetch("/categorias");
 };
 
 export const getPasajeros = () => {
-  return apiFetch("/pasajeros"); 
+  return apiFetch("/pasajeros");
 };
 
 export const createTicket = (ticketData) => {
@@ -94,5 +94,64 @@ export const createComment = (commentData) => {
 };
 
 export const getEstados = () => {
-  return apiFetch("/estados"); 
+  return apiFetch("/estados");
+};
+
+export const loginUser = (email, password) => {
+  try {
+    const response = fetch(`${API_BASE_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = response.json();
+
+    if (!response.ok) {
+      const errorMessage =
+        data.message ||
+        "Error al iniciar sesión. Credenciales inválidas o usuario inactivo.";
+      toast.error(errorMessage);
+      return;
+    }
+
+    localStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    toast.success(
+      `Bienvenido, ${data.user?.nombre || "usuario"}! Iniciando sesión...`
+    );
+
+    const userRoleName = data.user?.rol?.nombre_rol;
+
+    setTimeout(() => {
+      switch (userRoleName) {
+        case "Administrador":
+          navigate("/admin");
+          break;
+        case "Gerencia":
+        case "Agente Operativo Junior":
+          navigate("/bandeja");
+          break;
+        case "Agente Operativo Senior":
+          navigate("/bandeja");
+          break;
+        case "Atención al Pasajero":
+          navigate("/atencion");
+          break;
+        default:
+          navigate("/home");
+          break;
+      }
+    }, 1000);
+  } catch (err) {
+    console.error("Error de red/servidor:", err);
+    toast.error(
+      "No se pudo conectar o el servidor respondió con un error inesperado."
+    );
+  } finally {
+    setIsLoading(false);
+  }
 };

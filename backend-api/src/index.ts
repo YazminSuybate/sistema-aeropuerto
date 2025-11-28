@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import type { Application } from "express";
 import userRoutes from "./routes/usuario.routes.js";
 import rolRoutes from "./routes/rol.routes.js";
@@ -9,11 +10,11 @@ import categoriaRoutes from "./routes/categoria.routes.js";
 import estadoRoutes from "./routes/estado.routes.js";
 import pasajeroRoutes from "./routes/pasajero.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
-import { env } from 'prisma/config';
-
-//import Jesus
 import comentariosRoutes from './routes/comentarios.routes.js';
 import histoticketRoutes from './routes/historialtickets.routes.js';
+
+import { env } from 'prisma/config';
+
 
 const app: Application = express();
 const PORT = 3000;
@@ -24,7 +25,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
+app.use(cookieParser());
 app.use(express.json());
 
 // Rutas de la API
