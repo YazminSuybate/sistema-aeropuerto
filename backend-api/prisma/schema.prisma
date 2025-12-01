@@ -43,7 +43,6 @@ model usuario {
   password              String      @db.VarChar(255)
   activo                Boolean     @default(true) @db.TinyInt
   fecha_registro        DateTime    @default(now()) @db.Timestamp(0)
-  refresh_token         String?     @db.Text
 
   // Claves Foráneas
   id_rol                Int         @map("id_rol")
@@ -53,14 +52,30 @@ model usuario {
   rol                   rol         @relation(fields: [id_rol], references: [id_rol])
   area                  area?       @relation(fields: [id_area], references: [id_area])
 
+  refresh_tokens        refresh_token[]
+
   tickets_creados       ticket[]    @relation("Creador")
   tickets_responsable   ticket[]    @relation("Responsable")
   comentarios           comentario[]
   historial_movimientos historial_ticket[]
+
   // Nuevas Relaciones para el nuevo flujo
   liberaciones          liberacion_ticket[]
   solicitudes_creadas   solicitud_cambio_area[] @relation("Solicitante")
   solicitudes_aprobadas solicitud_cambio_area[] @relation("Aprobador")
+}
+
+// NUEVO MODELO PARA MULTI-SESIÓN
+model refresh_token {
+  id_token      Int      @id @default(autoincrement())
+  token         String   @db.Text
+  // Nota: MySQL no permite @unique en TEXT sin longitud prefijada. Mejor usar VarChar o solo lógica de negocio.
+  // Para simplificar y compatibilidad, usaremos String normal (Text) y búsquedas directas.
+  
+  fecha_creacion DateTime @default(now()) @db.Timestamp(0)
+  
+  id_usuario    Int
+  usuario       usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 }
 
 model estado {

@@ -56,12 +56,13 @@ export class UsuarioService {
 
         const newUsuario = await this.repository.create(userData);
 
-        const { password, refresh_token, ...usuarioSeguro } = newUsuario;
+        const { password, ...usuarioSeguro } = newUsuario;
 
         return usuarioSeguro as UsuarioResponseDTO;
     }
 
     async updateUsuario(id_usuario: number, data: UsuarioUpdateDTO): Promise<Usuario> {
+        
         if (data.password) {
             data.password = await bcrypt.hash(data.password, SALT_ROUNDS);
         }

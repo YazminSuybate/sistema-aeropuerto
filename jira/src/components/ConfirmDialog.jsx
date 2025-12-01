@@ -1,5 +1,5 @@
 import Modal from "./Modal";
-import Button from "../components/admin/userManagement/Button";
+import Button from "../features/admin/components/userManagement/Button";
 import "../styles/ConfirmDialog.css";
 
 const ConfirmDialog = ({

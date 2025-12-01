@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "npm run tsc && npx prisma generate",
+    "build": "npx prisma generate && npm run tsc",
     "start": "npx prisma migrate deploy && npx prisma db seed && node build/src/index.js",
     "tsc": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -35,6 +35,10 @@
     "express-validator": "7.3.0",
     "jsonwebtoken": "9.0.2",
     "multer": "^2.0.2",
+    "mysql2": "^3.15.3",
     "prisma": "6.18.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

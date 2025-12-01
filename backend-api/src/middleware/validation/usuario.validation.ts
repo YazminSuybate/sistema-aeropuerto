@@ -29,7 +29,8 @@ export const createUsuarioValidation = [
 
     body('email')
         .notEmpty().withMessage('El correo electrónico es obligatorio.')
-        .isEmail().withMessage('El formato del correo electrónico es inválido.'),
+        .isEmail().withMessage('El formato del correo electrónico es inválido.')
+        .normalizeEmail(),
 
     body('password')
         .notEmpty().withMessage('La contraseña es obligatoria.')
@@ -57,7 +58,8 @@ export const updateUsuarioValidation = [
     // Validaciones de Email
     body('email')
         .optional()
-        .isEmail().withMessage('El formato del correo electrónico es inválido.'),
+        .isEmail().withMessage('El formato del correo electrónico es inválido.')
+        .normalizeEmail(),
 
     // Validaciones de Password
     body('password')

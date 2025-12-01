@@ -1,28 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import { storage } from "../features/auth/utils/storage";
 
 const getSessionInfo = () => {
-  const userString = localStorage.getItem("user");
-  const accessToken = localStorage.getItem("accessToken");
+  const user = storage.getUser();
+  const token = storage.getToken();
 
-  if (!userString || !accessToken) {
+  if (!user || !token) {
     return { userRole: null, hasToken: false };
   }
 
-  try {
-    const user = JSON.parse(userString);
-    return { userRole: user.rol?.nombre_rol, hasToken: true };
-  } catch (e) {
-    console.error("Error al parsear datos de usuario, cerrando sesión local.", e);
-    
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    return { userRole: null, hasToken: false };
-  }
+  return { userRole: user.rol?.nombre_rol, hasToken: true };
 };
 
 const ProtectedRoute = ({ allowedRoles }) => {
-  const [session, setSession] = useState(getSessionInfo());
+  const [session] = useState(getSessionInfo());
   
   if (!session.hasToken) {
     return <Navigate to="/auth" replace />;
@@ -32,11 +24,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
     return <Navigate to="/" replace />;
   }
 
-  if (allowedRoles.includes(session.userRole)) {
-    return <Outlet />;
-  }
-  
-  return <Navigate to="/auth" replace />;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

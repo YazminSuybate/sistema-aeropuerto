@@ -63,14 +63,19 @@ export class AuthController {
     }
 
     async logout(req: AuthRequest, res: Response): Promise<Response> {
-        const userId = req.user?.id;
+        const refreshToken = req.cookies.refreshToken;
 
-        if (!userId) {
-            return res.status(401).json({ message: 'Usuario no autenticado (Token no adjunto).' });
+        if (!refreshToken) {
+            res.clearCookie('refreshToken', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+            });
+            return res.status(200).json({ message: 'Sesión cerrada (sin token activo).' });
         }
 
         try {
-            await authService.logout(userId);
+            await authService.logout(refreshToken);
 
             res.clearCookie('refreshToken', {
                 httpOnly: true,
@@ -83,7 +88,6 @@ export class AuthController {
             return handleControllerError(error, res, 'Error interno del servidor.');
         }
     }
-
     async refresh(req: Request, res: Response): Promise<Response> {
         const refreshToken = req.cookies.refreshToken;
 

@@ -16,22 +16,23 @@ export const Tabs = ({ activeTab: initialTab, onTabChange, children }) => {
   const tabs = []
   const content = {}
 
-  Array.isArray(children)
-    ? children.forEach((child) => {
-        if (child?.type === TabPane) {
-          tabs.push({
-            key: child.props.tabKey,
-            label: child.props.label,
-          })
-          content[child.props.tabKey] = child.props.children
-        }
-      })
-    : children?.type === TabPane &&
-      (tabs.push({
-        key: children.props.tabKey,
-        label: children.props.label,
-      }),
-      (content[children.props.tabKey] = children.props.children))
+  if (Array.isArray(children)) {
+    children.forEach((child) => {
+      if (child?.type === TabPane) {
+        tabs.push({
+          key: child.props.tabKey,
+          label: child.props.label,
+        })
+        content[child.props.tabKey] = child.props.children
+      }
+    })
+  } else if (children?.type === TabPane) {
+    tabs.push({
+      key: children.props.tabKey,
+      label: children.props.label,
+    })
+    content[children.props.tabKey] = children.props.children
+  }
 
   return (
     <div className="w-full">
@@ -56,6 +57,6 @@ export const Tabs = ({ activeTab: initialTab, onTabChange, children }) => {
   )
 }
 
-export const TabPane = ({ tabKey, label, children }) => {
+export const TabPane = ({ children }) => {
   return children
 }

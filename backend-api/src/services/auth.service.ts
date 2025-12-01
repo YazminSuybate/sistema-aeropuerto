@@ -16,7 +16,7 @@ if (!REFRESH_SECRET) {
     throw new Error("FATAL ERROR: REFRESH_SECRET no está definido.");
 }
 
-type UserResponse = Omit<usuario, | 'password' | 'refresh_token'> & {
+type UserResponse = Omit<usuario, 'password'> & { // Ya no excluimos refresh_token porque no está en el modelo
     rol?: any;
     area?: any;
 };
@@ -55,9 +55,10 @@ export class AuthService {
         const accessToken = sign(payload, JWT_SECRET, { expiresIn: '15m' });
         const refreshToken = sign(payload, REFRESH_SECRET, { expiresIn: '7d' });
 
-        await this.userRepository.updateRefreshToken(user.id_usuario, refreshToken);
+        // MULTI-SESIÓN: Creamos un nuevo registro en lugar de reemplazar
+        await this.userRepository.createRefreshToken(user.id_usuario, refreshToken);
 
-        const { password: userPassword, refresh_token, ...userData } = user;
+        const { password: userPassword, ...userData } = user;
 
         return {
             accessToken,
@@ -66,8 +67,11 @@ export class AuthService {
         };
     }
 
-    async logout(userId: number): Promise<void> {
-        await this.userRepository.updateRefreshToken(userId, null);
+    async logout(token: string): Promise<void> {
+        // MULTI-SESIÓN: Borramos solo el token específico
+        if (token) {
+            await this.userRepository.deleteRefreshToken(token);
+        }
     }
 
     async getProfileById(userId: number): Promise<UserResponse> {
@@ -77,21 +81,28 @@ export class AuthService {
             throw { statusCode: 404, message: 'Usuario no encontrado' };
         }
 
-        const { password, refresh_token, ...userWithoutPassword } = user;
+        const { password, ...userWithoutPassword } = user;
         return userWithoutPassword;
     }
 
-    async refreshAccessToken(currentRefreshToken: string): Promise<{ accessToken: string; refreshToken: string; user: UserResponse } | null> {
+async refreshAccessToken(currentRefreshToken: string): Promise<{ accessToken: string; refreshToken: string; user: UserResponse } | null> {
         try {
-            const decoded = verify(currentRefreshToken, REFRESH_SECRET) as { id: number, email: string, id_rol: number, id_area: number };
-            const userId = decoded.id;
+            const decoded = verify(currentRefreshToken, REFRESH_SECRET) as { id: number };
+            const userIdFromToken = decoded.id;
 
-            const user = await this.getProfileById(userId);
+            const user = await this.userRepository.findUserByRefreshToken(currentRefreshToken);
 
-            if (!user || user.id_usuario !== userId || !user.activo) {
+            if (!user) {
+                console.warn(`[ALERTA DE SEGURIDAD] Intento de re-uso de token detectado para el usuario ID ${userIdFromToken}.`);
+                await this.userRepository.deleteAllTokensForUser(userIdFromToken);
                 return null;
             }
 
+            if (user.id_usuario !== userIdFromToken || !user.activo) {
+                return null;
+            }
+
+            await this.userRepository.deleteRefreshToken(currentRefreshToken);
             const permisos = await this.rolRepository.getPermissionsByRoleId(user.id_rol);
 
             const payload = {
@@ -103,19 +114,20 @@ export class AuthService {
             };
 
             const newAccessToken = sign(payload, JWT_SECRET, { expiresIn: '15m' });
-
             const newRefreshToken = sign(payload, REFRESH_SECRET, { expiresIn: '7d' });
 
-            await this.userRepository.updateRefreshToken(user.id_usuario, newRefreshToken);
+            await this.userRepository.createRefreshToken(user.id_usuario, newRefreshToken);
+
+            const { password, ...userData } = user;
 
             return {
                 accessToken: newAccessToken,
                 refreshToken: newRefreshToken,
-                user: user,
+                user: userData,
             };
 
         } catch (error) {
-            console.error('Refresh token validation error:', error);
+            console.error('Error al refrescar token:', error);
             return null;
         }
     }

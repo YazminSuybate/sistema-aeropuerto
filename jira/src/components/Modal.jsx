@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import Button from "../components/admin/userManagement/Button";
+import Button from "../features/admin/components/userManagement/Button";
 import "../styles/Modal.css";
 
 const Modal = ({ isOpen, onClose, title, children, size = "medium" }) => {

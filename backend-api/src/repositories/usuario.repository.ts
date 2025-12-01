@@ -43,19 +43,38 @@ export class UsuarioRepository {
         });
     }
 
-    async updateRefreshToken(id_usuario: number, refreshToken: string | null): Promise<void> {
-        await prisma.usuario.update({
-            where: { id_usuario },
-            data: { refresh_token: refreshToken },
+    // --- NUEVOS MÉTODOS PARA MULTI-SESIÓN ---
+
+    async createRefreshToken(id_usuario: number, token: string): Promise<void> {
+        await prisma.refresh_token.create({
+            data: {
+                token,
+                id_usuario
+            }
         });
     }
 
-    async findByRefreshToken(refreshToken: string): Promise<Usuario | null> {
-        return prisma.usuario.findFirst({
-            where: { refresh_token: refreshToken },
+    async deleteRefreshToken(token: string): Promise<void> {
+        // Usamos deleteMany porque 'token' es TEXT y podría no ser único en definición prisma aunque lo sea en lógica
+        await prisma.refresh_token.deleteMany({
+            where: { token },
         });
     }
 
+    // Busca el usuario dueño de un refresh token
+    async findUserByRefreshToken(token: string): Promise<Usuario | null> {
+        const tokenRecord = await prisma.refresh_token.findFirst({
+            where: { token },
+            include: {
+                usuario: {
+                    include: { rol: true, area: true }
+                }
+            }
+        });
+
+        return tokenRecord ? tokenRecord.usuario : null;
+    }
+    
     async findByEmailWithRole(email: string): Promise<Usuario | null> {
         return prisma.usuario.findUnique({
             where: { email },
@@ -72,6 +91,12 @@ export class UsuarioRepository {
                 rol: true,
                 area: true,
             },
+        });
+    }
+
+    async deleteAllTokensForUser(id_usuario: number): Promise<void> {
+        await prisma.refresh_token.deleteMany({
+            where: { id_usuario },
         });
     }
 }

@@ -1,0 +1,172 @@
+{
+	"info": {
+		"_postman_id": "auth-flow-aeropuerto",
+		"name": "Aeropuerto API - Auth Flow",
+		"description": "Colección enfocada en el flujo de autenticación: Login, Logout, Refresh Token y Registro (Crear Usuario).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.accessToken) {",
+							"    pm.collectionVariables.set(\"token\", jsonData.accessToken);",
+							"    console.log(\"Access Token actualizado\");",
+							"}",
+							"// Nota: El Refresh Token se guarda automáticamente en las cookies de Postman"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"admin@aeropuerto.com\",\n    \"password\": \"admin123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"login"
+					]
+				},
+				"description": "Inicia sesión y obtiene el Access Token (body) y Refresh Token (cookie)."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get Profile (Me)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/auth/profile",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"profile"
+					]
+				},
+				"description": "Obtiene el perfil del usuario autenticado usando el Access Token."
+			},
+			"response": []
+		},
+		{
+			"name": "3. Refresh Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.accessToken) {",
+							"    pm.collectionVariables.set(\"token\", jsonData.accessToken);",
+							"    console.log(\"Access Token renovado\");",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/refresh",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"refresh"
+					]
+				},
+				"description": "Usa la cookie 'refreshToken' para obtener un nuevo Access Token."
+			},
+			"response": []
+		},
+		{
+			"name": "4. Logout",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/logout",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"logout"
+					]
+				},
+				"description": "Cierra sesión invalidando el Refresh Token."
+			},
+			"response": []
+		},
+		{
+			"name": "5. Register (Create User)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nombre\": \"Nuevo\",\n  \"apellido\": \"Usuario\",\n  \"email\": \"nuevo@aeropuerto.com\",\n  \"password\": \"123456\",\n  \"id_rol\": 2,\n  \"id_area\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/usuarios",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"usuarios"
+					]
+				},
+				"description": "Crea un nuevo usuario (Requiere ser Admin)."
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

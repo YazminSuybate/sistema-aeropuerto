@@ -21,7 +21,6 @@ router.get(
 // --- FIN DE LA RUTA NUEVA ---
 
 router.post('/refresh',
-    protect,
     authController.refresh);
 
 router.post('/logout',
