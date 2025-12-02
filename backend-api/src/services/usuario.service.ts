@@ -2,7 +2,7 @@ import * as bcrypt from 'bcryptjs';
 import type { UsuarioRepository } from '../repositories/usuario.repository.js';
 import type { Usuario, UsuarioCreateDTO, UsuarioUpdateDTO, UsuarioResponseDTO } from '../models/usuario.model.js';
 import type { RolRepository } from '../repositories/rol.repository.js';
-import { NotFoundError, BadRequestError } from '../errors/custom.error.js';
+import { BadRequestError } from '../errors/custom.error.js';
 
 const SALT_ROUNDS = 10;
 const OPERATIVE_ROLE_NAMES = ['Agente Operativo Junior', 'Agente Operativo Senior', 'Agente Operativo'];
@@ -41,7 +41,9 @@ export class UsuarioService {
             throw new BadRequestError('Los usuarios con rol operativo deben tener un área asignada.');
         }
 
-        const id_areaSource: number | null = isOperativeRole ? (data.id_area ?? null) : null;
+        const id_areaSource = (data.id_area !== undefined && data.id_area !== null)
+            ? data.id_area
+            : null;
 
         const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
 
@@ -62,37 +64,9 @@ export class UsuarioService {
     }
 
     async updateUsuario(id_usuario: number, data: UsuarioUpdateDTO): Promise<Usuario> {
-        
+
         if (data.password) {
             data.password = await bcrypt.hash(data.password, SALT_ROUNDS);
-        }
-
-        if (data.id_rol !== undefined || data.id_area !== undefined) {
-
-            const currentUser = await this.repository.findById(id_usuario);
-            if (!currentUser) {
-                throw new NotFoundError('Usuario');
-            }
-
-            const rolFinal = data.id_rol ?? currentUser.id_rol;
-            let areaFinal = data.id_area;
-
-            const isOperativeRoleFinal = this.operativeRoleIds.has(rolFinal);
-
-            if (isOperativeRoleFinal) {
-                if (areaFinal === undefined) {
-                    areaFinal = currentUser.id_area;
-                }
-
-                if (areaFinal === null) {
-                    throw new BadRequestError('El rol operativo requiere que se asigne un área.');
-                }
-
-            } else {
-                areaFinal = null;
-            }
-
-            data.id_area = areaFinal;
         }
 
         return this.repository.update(id_usuario, data);
