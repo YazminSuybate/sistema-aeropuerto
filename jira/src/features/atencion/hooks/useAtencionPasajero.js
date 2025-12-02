@@ -8,12 +8,14 @@ import {
   getPasajeros,
   createTicket,
   createComment,
+  getAreas,
 } from "../../tickets/api/ticketApi";
 
 export const useAtencionPasajero = () => {
   const [view, setView] = useState("list");
   const [tickets, setTickets] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [areas, setAreas] = useState([]);
   const [pasajeros, setPasajeros] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -26,17 +28,19 @@ export const useAtencionPasajero = () => {
         setLoading(true);
         setError(null);
 
-        const [user, ticketsData, categoriasData, pasajerosData] =
+        const [user, ticketsData, categoriasData, areasData, pasajerosData] =
           await Promise.all([
             authService.getProfile(storage.getToken()),
             getTickets(),
             getCategorias(),
+            getAreas(),
             getPasajeros(),
           ]);
 
         setCurrentUser(user);
         setTickets(ticketsData);
         setCategorias(categoriasData);
+        setAreas(areasData);
         setPasajeros(pasajerosData);
       } catch (err) {
         console.error(err);
@@ -107,9 +111,9 @@ export const useAtencionPasajero = () => {
         prevTickets.map((t) =>
           t.id_ticket === commentData.id_ticket
             ? {
-                ...t,
-                comentarios: [...(t.comentarios || []), newCommentWithUser],
-              }
+              ...t,
+              comentarios: [...(t.comentarios || []), newCommentWithUser],
+            }
             : t
         )
       );
@@ -126,6 +130,7 @@ export const useAtencionPasajero = () => {
     setView,
     tickets,
     categorias,
+    areas,
     pasajeros,
     loading,
     error,

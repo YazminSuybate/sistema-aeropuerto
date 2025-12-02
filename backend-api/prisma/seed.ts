@@ -201,7 +201,8 @@ async function main() {
         'TICKET_READ_BY_AREA',
         'TICKET_READ_BY_RESPONSIBLE',
         'TICKET_ASSIGN',
-        'TICKET_CLAIM'
+        'TICKET_CLAIM',
+        'AREA_READ'
     ];
 
     // Obtén los IDs de esos permisos del Map que creamos
@@ -230,6 +231,7 @@ async function main() {
         'CATEGORIA_READ',   // Necesario para el formulario de creación
         'PASAJERO_READ',    // Necesario para el formulario de creación
         'ESTADO_READ',      // <-- ¡ESTE ES EL PERMISO QUE FALTABA!
+        'AREA_READ'
     ];
 
     const atencionPermisoIds = atencionPermissionNames

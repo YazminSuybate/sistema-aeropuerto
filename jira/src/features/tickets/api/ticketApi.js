@@ -127,3 +127,7 @@ export const createComment = (commentData) => {
 export const getEstados = () => {
   return apiFetch("/estados");
 };
+
+export const getAreas = () => {
+  return apiFetch("/areas");
+};

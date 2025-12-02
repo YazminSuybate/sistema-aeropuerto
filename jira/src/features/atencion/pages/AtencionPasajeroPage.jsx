@@ -18,6 +18,7 @@ const AtencionPasajeroPage = () => {
     setView,
     tickets,
     categorias,
+    areas,
     pasajeros,
     loading,
     error,
@@ -62,6 +63,7 @@ const AtencionPasajeroPage = () => {
           <CreateTicketForm
             categorias={categorias}
             pasajeros={pasajeros}
+            areas={areas}
             currentUser={currentUser}
             onSubmit={handleCreateTicket}
             onCancel={() => setView("list")}

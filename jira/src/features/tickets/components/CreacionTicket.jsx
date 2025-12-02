@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft } from "lucide-react"; // Asumiendo que usas lucide-
 export const CreateTicketForm = ({
   categorias,
   pasajeros,
+  areas,
   currentUser,
   onSubmit,
   onCancel,
@@ -15,6 +16,7 @@ export const CreateTicketForm = ({
     descripcion: "",
     id_categoria: "",
     id_pasajero: "",
+    id_area_asignada: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,7 +28,10 @@ export const CreateTicketForm = ({
     if (pasajeros.length > 0 && formData.id_pasajero === "") {
       setFormData(prev => ({ ...prev, id_pasajero: pasajeros[0].id_pasajero }));
     }
-  }, [categorias, pasajeros, formData.id_categoria, formData.id_pasajero]);
+    if (areas && areas.length > 0 && formData.id_area_asignada === "") {
+      setFormData(prev => ({ ...prev, id_area_asignada: areas[0].id_area })); // Asumiendo que el ID es 'id_area'
+    }
+  }, [categorias, pasajeros, areas, formData.id_categoria, formData.id_pasajero, formData.id_area_asignada]);
 
 
   const handleChange = (e) => {
@@ -42,6 +47,7 @@ export const CreateTicketForm = ({
       ...formData,
       id_categoria: Number(formData.id_categoria),
       id_pasajero: Number(formData.id_pasajero),
+      id_area_asignada: Number(formData.id_area_asignada),
       // El hook 'useAtencionPasajero' añadirá el id_usuario_creador
     });
 
@@ -164,9 +170,30 @@ export const CreateTicketForm = ({
                   {c.nombre_categoria} (P: {c.prioridad})
                 </option>
               ))}
+            </select>            
+          </div>
+          <div>
+            <label htmlFor="id_area_asignada" className="block text-sm font-medium text-gray-700 mb-1">
+              Área Responsable
+            </label>
+            <select
+              id="id_area_asignada"
+              name="id_area_asignada"
+              value={formData.id_area_asignada}
+              onChange={handleChange}
+              required
+              className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="" disabled>Seleccione área...</option>
+              {/* Asumo que 'areas' viene con id_area y nombre_area */}
+              {areas && areas.map((a) => (
+                <option key={a.id_area} value={a.id_area}>
+                  {a.nombre_area}
+                </option>
+              ))}
             </select>
-            <p className="mt-2 text-xs text-gray-500">
-              El sistema asignará el área automáticamente.
+            <p className="mt-1 text-xs text-gray-500">
+              Selecciona el departamento técnico encargado.
             </p>
           </div>
         </div>
