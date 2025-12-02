@@ -12,6 +12,9 @@ import pasajeroRoutes from "./routes/pasajero.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
 import comentariosRoutes from './routes/comentarios.routes.js';
 import histoticketRoutes from './routes/historialtickets.routes.js';
+import morgan from 'morgan';
+import logger from './config/logger.js';
+import { errorHandler } from './middleware/error.middleware.js';
 
 import { env } from 'prisma/config';
 
@@ -23,6 +26,20 @@ const corsOptions = {
   origin: env("FRONTEND_URL"),
   credentials: true,
 };
+
+// 1. Configurar Morgan (HTTP Logger)
+const morganFormat = ':method :url :status :res[content-length] - :response-time ms';
+
+app.use(
+  morgan(morganFormat, {
+    stream: {
+      write: (message: string) => {
+        // Limpiamos el salto de línea extra que agrega morgan
+        logger.http(message.trim());
+      },
+    },
+  })
+);
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
@@ -39,6 +56,18 @@ app.use("/api/tickets", ticketRoutes);
 app.use('/api/comentarios', comentariosRoutes);
 app.use('/api/historialtickets', histoticketRoutes);
 app.use("/api", authRoutes);
+
+// 2. Endpoint Health Check
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// 3. Manejo Global de Errores (SIEMPRE AL FINAL)
+app.use(errorHandler);
 
 // Inicio del servidor
 app.listen(PORT, () => {

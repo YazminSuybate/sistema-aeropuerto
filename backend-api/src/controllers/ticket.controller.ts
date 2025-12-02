@@ -1,4 +1,4 @@
-import type { Response } from "express";
+import type { NextFunction, Response } from "express";
 
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 
@@ -23,13 +23,16 @@ const ticketService = new TicketService(
 
 export class TicketController {
   // GET /api/tickets
-  async getAllTickets(_req: AuthRequest, res: Response) {
+  async getAllTickets(_req: AuthRequest, res: Response, next: NextFunction) {
     try {
+
+      // //Forzar error crítico
+      // throw new Error("Test error crítico en getAllTickets");
+
       const tickets = await ticketService.getAllTickets();
       return res.status(200).json(tickets);
     } catch (error) {
-
-      return handleControllerError(error, res, "Error al obtener los tickets");
+      return next(error)
     }
   }
 
@@ -93,7 +96,7 @@ export class TicketController {
 
   // PUT /api/tickets/:id/assign
   async assignTicket(req: AuthRequest, res: Response) {
-    const id_ticket = validateAndGetId(req, res,'id');
+    const id_ticket = validateAndGetId(req, res, 'id');
     if (id_ticket === null) return;
 
     const { id_operador } = req.body;
@@ -122,7 +125,7 @@ export class TicketController {
 
   // PUT /api/tickets/:id/claim
   async claimTicket(req: AuthRequest, res: Response) {
-    const id_ticket = validateAndGetId(req, res,'id');
+    const id_ticket = validateAndGetId(req, res, 'id');
     if (id_ticket === null) return;
 
     const user = req.user!;
