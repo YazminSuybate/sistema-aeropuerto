@@ -27,7 +27,7 @@ export class TicketService {
     private categoriaRepository: CategoriaRepository,
     private estadoRepository: EstadoRepository,
     private usuarioRepository: UsuarioRepository
-  ) {}
+  ) { }
 
   async getAllTickets(): Promise<Ticket[]> {
     return this.ticketRepository.findAll();
@@ -89,10 +89,15 @@ export class TicketService {
       );
     }
 
+    const estadoAsignado = await this.estadoRepository.findByName("Asignado");
+    if (!estadoAsignado) {
+      throw new Error('Estado "Asignado" no encontrado en la configuración del sistema.');
+    }
+
     // 4. Preparamos la actualización (SOLO el responsable)
     const dataToUpdate = {
       id_usuario_responsable: id_operador,
-      id_estado: 2,
+      id_estado: estadoAsignado.id_estado,
     };
 
     // 5. Actualizamos
@@ -132,10 +137,15 @@ export class TicketService {
       );
     }
 
+    const estadoAsignado = await this.estadoRepository.findByName("Asignado");
+    if (!estadoAsignado) {
+      throw new Error('Error crítico: El estado "Asignado" no existe en la base de datos.');
+    }
+
     // 4. Preparamos la actualización (responsable Y estado)
     const dataToUpdate = {
       id_usuario_responsable: user.id, // El ID del usuario logueado
-      id_estado: 2, // "Asignado"
+      id_estado: estadoAsignado.id_estado, // "Asignado"
     };
 
     // 5. Actualizamos
