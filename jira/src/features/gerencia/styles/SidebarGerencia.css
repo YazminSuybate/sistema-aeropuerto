@@ -1,0 +1,70 @@
+/* src/features/gerencia/styles/SidebarGerencia.css */
+
+.sidebar-gerencia {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50; /* Un z-index alto para que esté sobre el contenido */
+  width: 16rem; /* 64px * 4 = 256px aprox */
+  background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%); /* Un gradiente sutil gris/blanco */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 2rem;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+  height: 100vh;
+  border-right: 1px solid #e5e7eb;
+}
+
+.sidebar-link-gerencia {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  color: #4b5563; /* Gray 600 */
+  transition: all 0.3s ease;
+  margin-bottom: 0.25rem;
+  border-left: 4px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-link-gerencia:hover {
+  background-color: #f9fafb;
+  color: var(--color-primary); /* Asumiendo que tienes esta variable */
+}
+
+.sidebar-link-gerencia.active {
+  background-color: #eff6ff; /* Un azul muy clarito */
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  font-weight: 700;
+}
+
+.gerencia-photo {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--color-primary);
+  margin-bottom: 0.75rem;
+  padding: 2px;
+  background-color: white;
+}
+
+.gerencia-nombre {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+}
+
+.gerencia-rol {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

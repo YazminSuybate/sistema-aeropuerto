@@ -20,23 +20,30 @@ export default function LoginForm() {
 
     try {
       const user = await login(email, password);
-      const userRoleName = user?.rol?.nombre_rol;
+      // Asegúrate que tu backend devuelve "nombre_rol" exactamente así
+      const userRoleName = user?.rol?.nombre_rol; 
 
       setTimeout(() => {
         switch (userRoleName) {
           case "Administrador":
             navigate("/admin");
             break;
+
+          // --- AQUÍ ESTABA EL ERROR, AHORA ESTÁ CORREGIDO ---
           case "Gerencia":
-          case "Agente Operativo Junior":
-            navigate("/bandeja");
+            navigate("/gerencia"); // Ahora redirige a su dashboard correcto
             break;
+          // --------------------------------------------------
+
+          case "Agente Operativo Junior":
           case "Agente Operativo Senior":
             navigate("/bandeja");
             break;
+
           case "Atención al Pasajero":
             navigate("/atencion");
             break;
+
           default:
             navigate("/home");
             break;
