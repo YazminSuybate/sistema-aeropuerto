@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import Button from "../../admin/components/userManagement/Button"; // Usamos tu Button
+import Button from "../../admin/components/userManagement/Button"; 
 import {
   Loader2,
   ArrowLeft,
@@ -12,10 +12,10 @@ import {
   ShieldAlert,
   Clock,
   Send,
-} from "lucide-react"; // Asumiendo que usas lucide-react
+} from "lucide-react"; 
 
-// Funciones de color (copiadas de tu AtencionTicketCard)
 const getEstadoColor = (estado) => {
+  if (!estado) return "bg-gray-100 text-gray-600";
   switch (estado) {
     case "Abierto": return "bg-blue-100 text-blue-800";
     case "Asignado": return "bg-purple-100 text-purple-800";
@@ -26,6 +26,7 @@ const getEstadoColor = (estado) => {
     default: return "bg-gray-100 text-gray-600";
   }
 };
+
 const getPrioridadColor = (prioridad) => {
   switch (prioridad) {
     case "Alta": return "text-red-500";
@@ -34,8 +35,6 @@ const getPrioridadColor = (prioridad) => {
   }
 };
 
-
-// Este componente muestra el chat y los detalles
 export const TicketDetailView = ({
   ticket,
   currentUser,
@@ -45,6 +44,9 @@ export const TicketDetailView = ({
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const chatEndRef = useRef(null);
+
+  // 1. Protección para Comentarios (Array vacío si es null)
+  const listaComentarios = ticket.comentarios || [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,10 +61,9 @@ export const TicketDetailView = ({
     setIsSubmitting(false);
   };
 
-  // Auto-scroll al final del chat cuando llegan nuevos mensajes
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [ticket.comentarios]);
+  }, [listaComentarios]);
 
   return (
     <div className="animate-fade-in">
@@ -86,7 +87,7 @@ export const TicketDetailView = ({
               Descripción
             </h3>
             <p className="text-gray-700 whitespace-pre-wrap">
-              {ticket.descripcion}
+              {ticket.descripcion || "Sin descripción disponible."}
             </p>
           </div>
           <div className="bg-white rounded-lg shadow-md border border-gray-200">
@@ -97,15 +98,16 @@ export const TicketDetailView = ({
               </h3>
             </div>
             <div className="p-6 space-y-5 max-h-[400px] overflow-y-auto bg-gray-50">
-              {ticket.comentarios.length === 0 && (
+              {listaComentarios.length === 0 && (
                 <p className="text-center text-gray-500 italic">
                   No hay comentarios.
                 </p>
               )}
-              {ticket.comentarios.map((comment) => {
-                // El repositorio de ticket y comentario debe hacer 'include' del usuario
-                const isCurrentUser =
-                  comment.usuario.id_usuario === currentUser.id_usuario;
+              {listaComentarios.map((comment) => {
+                // Protección extra por si el usuario del comentario viene null
+                const nombreUsuario = comment.usuario ? `${comment.usuario.nombre} ${comment.usuario.apellido}` : "Usuario Desconocido";
+                const isCurrentUser = comment.usuario?.id_usuario === currentUser.id_usuario;
+                
                 return (
                   <div
                     key={comment.id_comentario}
@@ -123,7 +125,7 @@ export const TicketDetailView = ({
                       <div className="flex items-center gap-2 mb-1">
                         <User size={14} />
                         <span className="text-sm font-bold">
-                          {comment.usuario.nombre} {comment.usuario.apellido}
+                          {nombreUsuario}
                         </span>
                       </div>
                       <p className="text-sm">{comment.mensaje}</p>
@@ -153,7 +155,7 @@ export const TicketDetailView = ({
                 <Button 
                   type="submit" 
                   variant="primary" 
-                  size="medium" // Añadido para consistencia
+                  size="medium" 
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
@@ -167,26 +169,29 @@ export const TicketDetailView = ({
           </div>
         </div>
 
-        {/* Columna Lateral: Detalles Clave */}
+        {/* Columna Lateral: Detalles Clave (ZONA BLINDADA) */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Detalles
             </h3>
             <ul className="space-y-3">
+              {/* ESTADO */}
               <li className="flex items-center gap-3">
                 <Grip size={18} className="text-gray-500" />
                 <div>
                   <span className="text-xs text-gray-500">Estado</span>
                   <p
                     className={`font-semibold px-2 py-0.5 rounded text-sm inline-block ${getEstadoColor(
-                      ticket.estado.nombre_estado
+                      ticket.estado?.nombre_estado
                     )}`}
                   >
-                    {ticket.estado.nombre_estado}
+                    {ticket.estado?.nombre_estado || "Desconocido"}
                   </p>
                 </div>
               </li>
+
+              {/* RESPONSABLE (Protección con ?.) */}
               <li className="flex items-center gap-3">
                 <User size={18} className="text-gray-500" />
                 <div>
@@ -198,53 +203,63 @@ export const TicketDetailView = ({
                   </p>
                 </div>
               </li>
+
+              {/* CATEGORÍA (Protección con ?.) */}
               <li className="flex items-center gap-3">
                 <Tag size={18} className="text-gray-500" />
                 <div>
                   <span className="text-xs text-gray-500">Categoría</span>
                   <p className="font-semibold text-gray-700">
-                    {ticket.categoria_info.nombre_categoria}
+                    {ticket.categoria_info?.nombre_categoria || "Sin Categoría"}
                   </p>
                 </div>
               </li>
+
+              {/* PRIORIDAD (Protección con ?.) */}
               <li className="flex items-center gap-3">
                 <ShieldAlert
                   size={18}
                   className={getPrioridadColor(
-                    ticket.categoria_info.prioridad
+                    ticket.categoria_info?.prioridad
                   )}
                 />
                 <div>
                   <span className="text-xs text-gray-500">Prioridad</span>
                   <p className="font-semibold text-gray-700">
-                    {ticket.categoria_info.prioridad}
+                    {ticket.categoria_info?.prioridad || "N/A"}
                   </p>
                 </div>
               </li>
+
+              {/* SLA (Protección con ?.) */}
               <li className="flex items-center gap-3">
                 <Clock size={18} className="text-gray-500" />
                 <div>
                   <span className="text-xs text-gray-500">SLA (Horas)</span>
                   <p className="font-semibold text-gray-700">
-                    {ticket.categoria_info.sla_horas}h
+                    {ticket.categoria_info?.sla_horas ? `${ticket.categoria_info.sla_horas}h` : "N/A"}
                   </p>
                 </div>
               </li>
+
               <li className="flex items-center gap-3">
                 <Calendar size={18} className="text-gray-500" />
                 <div>
                   <span className="text-xs text-gray-500">Creación</span>
                   <p className="font-semibold text-gray-700">
-                    {new Date(ticket.fecha_creacion).toLocaleString()}
+                    {ticket.fecha_creacion ? new Date(ticket.fecha_creacion).toLocaleString() : "Fecha inválida"}
                   </p>
                 </div>
               </li>
+
+              {/* DOCUMENTO (Aquí estaba el error) */}
               <li className="flex items-center gap-3">
                 <Ticket size={18} className="text-gray-500" />
                 <div>
                   <span className="text-xs text-gray-500">Documento</span>
                   <p className="font-semibold text-gray-700">
-                    {ticket.pasajero_info.documento_id}
+                    {/* El operador ?. evita que explote si pasajero_info es null */}
+                    {ticket.pasajero_info?.documento_id || "Sin documento"}
                   </p>
                 </div>
               </li>

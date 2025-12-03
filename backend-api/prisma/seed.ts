@@ -57,6 +57,9 @@ const permissionsData = [
     { nombre: 'TICKET_READ_BY_RESPONSIBLE', descripcion: 'Permite ver la lista de tickets de un responsable' },
     { nombre: 'TICKET_ASSIGN', descripcion: 'Permite asignar un ticket a un operador' },
     { nombre: 'TICKET_CLAIM', descripcion: 'Permite a un operador tomar un ticket disponible' },
+
+    // --- NUEVO PERMISO AGREGADO AQUÍ ---
+    { nombre: 'COMENTARIO_CREATE', descripcion: 'Permite agregar comentarios a un ticket.' },
 ];
 
 // Roles definidos 
@@ -202,7 +205,8 @@ async function main() {
         'TICKET_READ_BY_RESPONSIBLE',
         'TICKET_ASSIGN',
         'TICKET_CLAIM',
-        'AREA_READ'
+        'AREA_READ',
+        'COMENTARIO_CREATE' // Asumimos que los operativos también deberían poder comentar
     ];
 
     // Obtén los IDs de esos permisos del Map que creamos
@@ -231,7 +235,8 @@ async function main() {
         'CATEGORIA_READ',   // Necesario para el formulario de creación
         'PASAJERO_READ',    // Necesario para el formulario de creación
         'ESTADO_READ',      // <-- ¡ESTE ES EL PERMISO QUE FALTABA!
-        'AREA_READ'
+        'AREA_READ',
+        'COMENTARIO_CREATE' // <-- ¡ESTE ES EL NUEVO PERMISO PARA COMENTAR!
     ];
 
     const atencionPermisoIds = atencionPermissionNames
