@@ -68,9 +68,7 @@ model usuario {
 // NUEVO MODELO PARA MULTI-SESIÓN
 model refresh_token {
   id_token      Int      @id @default(autoincrement())
-  token         String   @db.Text
-  // Nota: MySQL no permite @unique en TEXT sin longitud prefijada. Mejor usar VarChar o solo lógica de negocio.
-  // Para simplificar y compatibilidad, usaremos String normal (Text) y búsquedas directas.
+  token         String @db.VarChar(191)
   
   fecha_creacion DateTime @default(now()) @db.Timestamp(0)
   

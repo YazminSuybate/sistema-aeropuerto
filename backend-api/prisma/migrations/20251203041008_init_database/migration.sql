@@ -37,7 +37,7 @@ CREATE TABLE `usuario` (
 -- CreateTable
 CREATE TABLE `refresh_token` (
     `id_token` INTEGER NOT NULL AUTO_INCREMENT,
-    `token` TEXT NOT NULL,
+    `token` VARCHAR(191) NOT NULL,
     `fecha_creacion` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `id_usuario` INTEGER NOT NULL,
 

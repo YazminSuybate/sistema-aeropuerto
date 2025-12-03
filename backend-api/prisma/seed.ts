@@ -123,42 +123,23 @@ async function createCategorias(areaMap: Map<string, number>) {
 
 async function main() {
     console.log('Iniciando el proceso de seeding...');
-
-    // --- 1. Limpiar la base de datos (USANDO TRUNCATE) ---
-    // TRUNCATE resetea los contadores de ID a 1
-
-    // Desactivar temporalmente la revisión de llaves foráneas
-    await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0;');
-    console.log('Llaves foráneas desactivadas temporalmente.');
-
-    // Lista de todas las tablas a truncar (en cualquier orden, ya que las llaves están off)
-    // Asegúrate de que los nombres coincidan con tu BD (schema.prisma usa @@map("...") a veces)
-    const tableNames = [
-        'rol_permiso',
-        'ticket',
-        'categoria',
-        'estado',
-        'pasajero',
-        'usuario',
-        'permiso',
-        'rol',
-        'area',
-        'comentario',
-        'evidencia',
-        'historial_ticket',
-        'liberacion_ticket',
-        'solicitud_cambio_area'
-    ];
-
-    for (const table of tableNames) {
-        await prisma.$executeRawUnsafe(`TRUNCATE TABLE \`${table}\`;`);
-        console.log(`Tabla '${table}' truncada y reseteada.`);
-    }
-
-    // Reactivar la revisión de llaves foráneas
-    await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1;');
-    console.log('Llaves foráneas reactivadas.');
-    console.log('Datos existentes eliminados y contadores reseteados.');
+    console.log('Limpiando tablas...');
+    await prisma.solicitud_cambio_area.deleteMany();
+    await prisma.liberacion_ticket.deleteMany();
+    await prisma.comentario.deleteMany();
+    await prisma.evidencia.deleteMany();
+    await prisma.historial_ticket.deleteMany();
+    await prisma.ticket.deleteMany();
+    await prisma.pasajero.deleteMany();
+    await prisma.categoria.deleteMany();
+    await prisma.estado.deleteMany();
+    await prisma.rol_permiso.deleteMany();
+    await prisma.refresh_token.deleteMany();
+    await prisma.usuario.deleteMany();
+    await prisma.rol.deleteMany();
+    await prisma.permiso.deleteMany();
+    await prisma.area.deleteMany();
+    console.log('Tablas limpiadas y listas para el seeding.');
 
     // --- 2. Crear Permisos ---
     const createdPermisos = await Promise.all(
