@@ -68,7 +68,7 @@ model usuario {
 // NUEVO MODELO PARA MULTI-SESIÓN
 model refresh_token {
   id_token      Int      @id @default(autoincrement())
-  token         String    @db.VarChar(191)
+  token         String    @db.Text
   
   fecha_creacion DateTime @default(now()) @db.Timestamp(0)
   
