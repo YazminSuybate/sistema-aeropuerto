@@ -27,12 +27,21 @@ CREATE TABLE `usuario` (
     `password` VARCHAR(255) NOT NULL,
     `activo` BOOLEAN NOT NULL DEFAULT true,
     `fecha_registro` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
-    `refresh_token` VARCHAR(255) NULL,
     `id_rol` INTEGER NOT NULL,
     `id_area` INTEGER NULL,
 
     UNIQUE INDEX `usuario_email_key`(`email`),
     PRIMARY KEY (`id_usuario`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `refresh_token` (
+    `id_token` INTEGER NOT NULL AUTO_INCREMENT,
+    `token` TEXT NOT NULL,
+    `fecha_creacion` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `id_usuario` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id_token`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -63,6 +72,7 @@ CREATE TABLE `pasajero` (
     `documento_id` VARCHAR(50) NOT NULL,
     `info_contacto` VARCHAR(255) NULL,
 
+    UNIQUE INDEX `pasajero_documento_id_key`(`documento_id`),
     PRIMARY KEY (`id_pasajero`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -171,6 +181,9 @@ ALTER TABLE `usuario` ADD CONSTRAINT `usuario_id_rol_fkey` FOREIGN KEY (`id_rol`
 
 -- AddForeignKey
 ALTER TABLE `usuario` ADD CONSTRAINT `usuario_id_area_fkey` FOREIGN KEY (`id_area`) REFERENCES `area`(`id_area`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `refresh_token` ADD CONSTRAINT `refresh_token_id_usuario_fkey` FOREIGN KEY (`id_usuario`) REFERENCES `usuario`(`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `categoria` ADD CONSTRAINT `categoria_id_area_default_fkey` FOREIGN KEY (`id_area_default`) REFERENCES `area`(`id_area`) ON DELETE RESTRICT ON UPDATE CASCADE;

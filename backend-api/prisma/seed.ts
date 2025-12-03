@@ -206,7 +206,8 @@ async function main() {
         'TICKET_ASSIGN',
         'TICKET_CLAIM',
         'AREA_READ',
-        'COMENTARIO_CREATE' // Asumimos que los operativos también deberían poder comentar
+        'COMENTARIO_CREATE', // Asumimos que los operativos también deberían poder comentar
+        'TICKET_READ_ID'
     ];
 
     // Obtén los IDs de esos permisos del Map que creamos

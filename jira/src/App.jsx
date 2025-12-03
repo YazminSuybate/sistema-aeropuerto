@@ -15,6 +15,8 @@ import AtencionPasajeroPage from "./features/atencion/pages/AtencionPasajeroPage
 // 1. IMPORTAMOS EL DASHBOARD DE GERENCIA (Verifica que la ruta coincida con tu imagen)
 import GerenciaDashboard from "./features/gerencia/pages/GerenciaDashboard";
 
+import { TicketDetailPage } from "./features/operativo/pages/TicketDetailPage"
+
 export default function App() {
   return (
     <Router>
@@ -50,6 +52,9 @@ export default function App() {
           }
         >
           <Route path="/bandeja" element={<BandejaOperativoPage />} />
+
+          <Route path="/ruta-del-detalle-del-ticket/:id" element={<TicketDetailPage />} />
+
         </Route>
 
         {/* --- 2. NUEVA RUTA DE GERENCIA --- */}

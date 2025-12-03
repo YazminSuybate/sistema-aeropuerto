@@ -131,3 +131,8 @@ export const getEstados = () => {
 export const getAreas = () => {
   return apiFetch("/areas");
 };
+
+
+export const getTicketById = (ticketId) => {
+  return apiFetch(`/tickets/${ticketId}`);
+};
